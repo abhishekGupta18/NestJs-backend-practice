@@ -1,93 +1,145 @@
-# nestjs
+# NestJS Boilerplate
 
+## Setup
 
+- Minimum Node version should be **18 & above**.
+- Install `docker` CLI, `docker-compose`, and `colima` docker engine via Homebrew.
+- Start the Docker engine by running `colima start`.
+- Add a `.env` file and copy the content from `.env.example` file, then add the actual values for all fields to avoid issues at runtime.
+- We have integrated **Prometheus** and **Grafana** to provide monitoring and visualization for metrics (APM). These tools help monitor the performance and activity of your NestJS application.
 
-## Getting started
+## Key Features
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### 1. **Logging**
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- The application uses a custom `LoggerService` that captures detailed logs for different operations. Logs are stored in a file for later analysis and debugging.
+- You can find the logs in the `logs` directory of the application.
 
-## Add your files
+### 2. **Metrics Monitoring**
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+- The boilerplate integrates **Prometheus** for collecting application metrics and **Grafana** for visualization.
+- The `/metrics` endpoint exposes all the metrics in the **Prometheus** format, which helps monitor application performance in real-time.
 
+#### Key Metrics Exposed
+
+- Total number of HTTP requests
+- Request duration
+- Active users
+- CPU and memory usage
+- Req. Method, Res. Status, ROUTE/Path (For better filteration) etc.
+
+### 3. **Cache Management**
+
+- A custom `ClientControlledCacheInterceptor` is implemented to cache responses, optimizing performance for repeated requests.
+- This interceptor can manage caching logic based on HTTP `Cache-Control` headers.
+- Caching is handled using NestJS's built-in `CacheModule`, with support for various storage backends like Redis, in-memory, etc.
+
+### 4. **Swagger Documentation**
+
+- The boilerplate uses `SwaggerModule` to generate REST API documentation automatically.
+- You can access the Swagger UI at `/api` after running the application. It provides detailed API information, including request and response structures.
+
+### 5. **GraphQL Integration**
+
+- The application comes with a fully integrated **Apollo GraphQL** server. The GraphQL schema is auto-generated, making it easier to manage queries and mutations.
+- Access the GraphQL playground at `/graphql` to explore the schema, run queries, and test mutations.
+
+### 6. **Hashing Technique**
+
+- The boilerplate uses **bcrypt** for hashing passwords, ensuring secure storage. The `HashingService` provides methods for hashing and comparing data, which is useful for handling sensitive information like passwords.
+
+### 7. **Environment Variable Validation**
+
+- The `EnvConfigModule` validates all required environment variables using the `joi` library to ensure that your application starts with all the necessary configurations.
+
+---
+
+## Running the app
+
+```bash
+# Install dependencies
+$ npm install
+
+# Start the Docker services (Prometheus, and Grafana)
+$ docker compose up -d
+
+# Start the app in development mode
+$ npm run start:dev
 ```
-cd existing_repo
-git remote add origin https://git.geekyants.com/geekyants/coe-grp/boilerplates/nestjs.git
-git branch -M main
-git push -uf origin main
+
+### Accessing the Tools
+
+Once the Docker services are up, you can access the following:
+
+- **Prometheus**: Available at `http://localhost:${PROMETHEUS_PORT}`. Prometheus collects and stores the metrics exposed by our NestJS app.
+- **Grafana**: Available at `http://localhost:${GRAFANA_PORT}`. You can visualize your app metrics by setting up Grafana dashboards.
+  - Login credentials for Grafana: `admin` / `{GRAFANA_ADMIN_PASSWORD}` (Password set via environment variables).
+  - After login, add Prometheus as a data source in Grafana:
+    1. Go to **Configuration** → **Data Sources**.
+    2. Click **Add Data Source**, select **Prometheus**, and enter `http://prometheus:9090` as the URL.
+    3. Save and test the data source.
+  - Create a dashboard by taking references from [Grafana Dashboards](https://grafana.com/grafana/dashboards/).
+
+### Logs
+
+- All application logs are stored in the `/logs` directory.
+- The logger captures information such as request paths, methods, status codes, and response times.
+
+### Monitoring Metrics
+
+You can fetch the metrics by visiting `/metrics` on your running NestJS application. These metrics are collected by Prometheus and displayed in Grafana for visualization.
+
+### Cache Interceptor
+
+The `ClientControlledCacheInterceptor` handles response caching based on client-provided `Cache-Control` headers. It uses an MD5 hash to generate cache keys, ensuring efficient caching without conflicts.
+
+### Swagger Documentation
+
+Swagger provides auto-generated REST API documentation at `http://localhost:${PORT}/api`. This documentation is generated based on decorators used in the application and is updated as the application evolves.
+
+### GraphQL Integration
+
+The GraphQL endpoint `/graphql` provides a playground interface to interact with the GraphQL schema. The schema is automatically generated based on your resolvers and entities using Apollo Server.
+
+### Hashing with Bcrypt
+
+The boilerplate integrates `bcrypt` for secure password hashing:
+
+- **hash(data)**: Hashes data (usually passwords) before storing them in the database.
+- **compare(data, encrypted)**: Compares hashed data with a plain string to validate matches.
+
+---
+
+## Managing Docker Containers Using Docker CLI
+
+To interact with Docker containers via the CLI, use the following commands:
+
+```bash
+# Start the Docker services (Postgres, Prometheus, and Grafana)
+$ docker-compose up -d
+
+# Stop and remove all Docker containers
+$ docker-compose down
+
+# Rebuild Docker containers if there are changes
+$ docker-compose up --build
+
+# View logs for all services
+$ docker-compose logs -f
+
+# Check running containers
+$ docker ps -a
 ```
 
-## Integrate with your tools
+## Test
 
-- [ ] [Set up project integrations](https://git.geekyants.com/geekyants/coe-grp/boilerplates/nestjs/-/settings/integrations)
+```bash
+# Run unit tests
+$ npm run test
 
-## Collaborate with your team
+# Run e2e tests
+$ npm run test:e2e
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+# Check test coverage
+$ npm run test:cov
+```

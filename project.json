@@ -1,0 +1,61 @@
+{
+  "root": "apps/nestjs-boilerplate",
+  "sourceRoot": "apps/nestjs-boilerplate/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/node:build",
+      "outputs": ["dist/apps/nestjs-boilerplate"],
+      "options": {
+        "outputPath": "dist/apps/nestjs-boilerplate",
+        "main": "apps/nestjs-boilerplate/src/main.ts",
+        "tsConfig": "apps/nestjs-boilerplate/tsconfig.app.json",
+        "assets": ["apps/nestjs-boilerplate/src/assets"]
+      }
+    },
+    "serve": {
+      "executor": "@nx/node:execute",
+      "options": {
+        "buildTarget": "nestjs-boilerplate:build"
+      }
+    },
+    "lint": {
+      "executor": "@nx/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["apps/nestjs-boilerplate/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/nestjs-boilerplate/jest.config.js",
+        "passWithNoTests": true
+      }
+    },
+    "db:dev:up": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker-compose up -d"
+      }
+    },
+    "db:dev:rm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docker-compose down --volumes --remove-orphans"
+      }
+    },
+    "start:dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "nest start --watch"
+      }
+    },
+    "start:prod": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node dist/main"
+      }
+    }
+  },
+  "tags": []
+}

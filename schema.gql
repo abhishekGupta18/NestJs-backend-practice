@@ -1,0 +1,15 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""PlainText custom scalar type for multi-line strings"""
+scalar PlainText
+
+type Query {
+  getMetrics: PlainText!
+}
+
+type Mutation {
+  incrementHttpRequests: PlainText!
+  setActiveUsers: PlainText!
+}
