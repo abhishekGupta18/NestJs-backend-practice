@@ -143,10 +143,10 @@ Following these steps will integrate your new module seamlessly within your Nest
 
 Below are links to detailed guides for integrating common modules:
 
-1. 🔑 **[Auth Module](/docs/backend/Monolith/NestJs/Authentication#how-to-add-in-existing-application)**
-2. 🔒 **[Authorization Module](docs/backend/Monolith/NestJs/Authorization#how-to-add-in-existing-application)**
-3. 📤 **[Media Upload Module](/docs/backend/Monolith/NestJs/FileStorage#how-to-add-in-existing-application)**
-4. 📧 **[Email Module](/docs/backend/Monolith/NestJs/Email#how-to-add-in-existing-application)**
-5. 📲 **[SMS Module](/docs/backend/Monolith/NestJs/Sms#how-to-add-in-existing-application)**
+1. 🔑 **[Auth Module](https://coe.geekyants.com/docs/backend/Monolith/NestJs/Authentication#how-to-add-in-existing-application)**
+2. 🔒 **[Authorization Module](https://coe.geekyants.comdocs/backend/Monolith/NestJs/Authorization#how-to-add-in-existing-application)**
+3. 📤 **[Media Upload Module](https://coe.geekyants.com/docs/backend/Monolith/NestJs/FileStorage#how-to-add-in-existing-application)**
+4. 📧 **[Email Module](https://coe.geekyants.com/docs/backend/Monolith/NestJs/Email#how-to-add-in-existing-application)**
+5. 📲 **[SMS Module](https://coe.geekyants.com/docs/backend/Monolith/NestJs/Sms#how-to-add-in-existing-application)**
 
 These guides provide detailed steps on how to add the module, what dependencies are needed, and how to configure everything.
