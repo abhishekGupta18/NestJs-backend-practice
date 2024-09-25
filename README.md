@@ -1,145 +1,152 @@
-# NestJS Boilerplate
+# 🌐 **NestJS Boilerplate Documentation**
 
-## Setup
-
-- Minimum Node version should be **18 & above**.
-- Install `docker` CLI, `docker-compose`, and `colima` docker engine via Homebrew.
-- Start the Docker engine by running `colima start`.
-- Add a `.env` file and copy the content from `.env.example` file, then add the actual values for all fields to avoid issues at runtime.
-- We have integrated **Prometheus** and **Grafana** to provide monitoring and visualization for metrics (APM). These tools help monitor the performance and activity of your NestJS application.
-
-## Key Features
-
-### 1. **Logging**
-
-- The application uses a custom `LoggerService` that captures detailed logs for different operations. Logs are stored in a file for later analysis and debugging.
-- You can find the logs in the `logs` directory of the application.
-
-### 2. **Metrics Monitoring**
-
-- The boilerplate integrates **Prometheus** for collecting application metrics and **Grafana** for visualization.
-- The `/metrics` endpoint exposes all the metrics in the **Prometheus** format, which helps monitor application performance in real-time.
-
-#### Key Metrics Exposed
-
-- Total number of HTTP requests
-- Request duration
-- Active users
-- CPU and memory usage
-- Req. Method, Res. Status, ROUTE/Path (For better filteration) etc.
-
-### 3. **Cache Management**
-
-- A custom `ClientControlledCacheInterceptor` is implemented to cache responses, optimizing performance for repeated requests.
-- This interceptor can manage caching logic based on HTTP `Cache-Control` headers.
-- Caching is handled using NestJS's built-in `CacheModule`, with support for various storage backends like Redis, in-memory, etc.
-
-### 4. **Swagger Documentation**
-
-- The boilerplate uses `SwaggerModule` to generate REST API documentation automatically.
-- You can access the Swagger UI at `/api` after running the application. It provides detailed API information, including request and response structures.
-
-### 5. **GraphQL Integration**
-
-- The application comes with a fully integrated **Apollo GraphQL** server. The GraphQL schema is auto-generated, making it easier to manage queries and mutations.
-- Access the GraphQL playground at `/graphql` to explore the schema, run queries, and test mutations.
-
-### 6. **Hashing Technique**
-
-- The boilerplate uses **bcrypt** for hashing passwords, ensuring secure storage. The `HashingService` provides methods for hashing and comparing data, which is useful for handling sensitive information like passwords.
-
-### 7. **Environment Variable Validation**
-
-- The `EnvConfigModule` validates all required environment variables using the `joi` library to ensure that your application starts with all the necessary configurations.
+Welcome to the **NestJS Boilerplate** documentation. This guide will help you set up, run, and extend your NestJS application with essential modules and integrations.
 
 ---
 
-## Running the app
+## 🛠️ **Setup**
+
+Before you start, ensure that you have the following prerequisites:
+
+- **Node.js**: Minimum version should be **18 & above**.
+- **Docker CLI**, **Docker Compose**, and **Colima** (or an equivalent Docker engine) installed on your system.
+- Start the Docker engine using:
+  
+  ```bash
+  colima start
+  ```
+
+- Create a `.env` file in the root of your project. Copy the contents from `.env.example` and replace them with actual values to avoid runtime issues.
+
+> 💡 **Note:** We have integrated **Prometheus** and **Grafana** for Application Performance Monitoring (APM) to help you monitor and visualize metrics in your NestJS application.
+
+---
+
+## 🚀 **Running the App**
+
+Follow these steps to start your application:
 
 ```bash
-# Install dependencies
-$ npm install
+# 1️⃣ Install dependencies
+$ yarn install
 
-# Start the Docker services (Prometheus, and Grafana)
+# 2️⃣ Start Docker services (Prometheus and Grafana)
 $ docker compose up -d
 
-# Start the app in development mode
-$ npm run start:dev
+# 3️⃣ Start the NestJS app in development mode
+$ yarn start:dev
 ```
-
-### Accessing the Tools
-
-Once the Docker services are up, you can access the following:
-
-- **Prometheus**: Available at `http://localhost:${PROMETHEUS_PORT}`. Prometheus collects and stores the metrics exposed by our NestJS app.
-- **Grafana**: Available at `http://localhost:${GRAFANA_PORT}`. You can visualize your app metrics by setting up Grafana dashboards.
-  - Login credentials for Grafana: `admin` / `{GRAFANA_ADMIN_PASSWORD}` (Password set via environment variables).
-  - After login, add Prometheus as a data source in Grafana:
-    1. Go to **Configuration** → **Data Sources**.
-    2. Click **Add Data Source**, select **Prometheus**, and enter `http://prometheus:9090` as the URL.
-    3. Save and test the data source.
-  - Create a dashboard by taking references from [Grafana Dashboards](https://grafana.com/grafana/dashboards/).
-
-### Logs
-
-- All application logs are stored in the `/logs` directory.
-- The logger captures information such as request paths, methods, status codes, and response times.
-
-### Monitoring Metrics
-
-You can fetch the metrics by visiting `/metrics` on your running NestJS application. These metrics are collected by Prometheus and displayed in Grafana for visualization.
-
-### Cache Interceptor
-
-The `ClientControlledCacheInterceptor` handles response caching based on client-provided `Cache-Control` headers. It uses an MD5 hash to generate cache keys, ensuring efficient caching without conflicts.
-
-### Swagger Documentation
-
-Swagger provides auto-generated REST API documentation at `http://localhost:${PORT}/api`. This documentation is generated based on decorators used in the application and is updated as the application evolves.
-
-### GraphQL Integration
-
-The GraphQL endpoint `/graphql` provides a playground interface to interact with the GraphQL schema. The schema is automatically generated based on your resolvers and entities using Apollo Server.
-
-### Hashing with Bcrypt
-
-The boilerplate integrates `bcrypt` for secure password hashing:
-
-- **hash(data)**: Hashes data (usually passwords) before storing them in the database.
-- **compare(data, encrypted)**: Compares hashed data with a plain string to validate matches.
 
 ---
 
-## Managing Docker Containers Using Docker CLI
+## 📊 **Accessing Monitoring Tools**
 
-To interact with Docker containers via the CLI, use the following commands:
+Once the Docker services are up, you can access the following tools:
 
-```bash
-# Start the Docker services (Postgres, Prometheus, and Grafana)
-$ docker-compose up -d
+- 🔹 **Prometheus**: Available at `http://localhost:${PROMETHEUS_PORT}`. It collects and stores metrics exposed by the NestJS app.
+- 🔹 **Grafana**: Available at `http://localhost:${GRAFANA_PORT}`. Visualize your app metrics by setting up Grafana dashboards.
+  
+  > **Login credentials for Grafana**:
+  > - **Username**: `admin`
+  > - **Password**: `{GRAFANA_ADMIN_PASSWORD}` (from your `.env` file)
 
-# Stop and remove all Docker containers
-$ docker-compose down
+### 🎛️ **Setting up Prometheus in Grafana:**
 
-# Rebuild Docker containers if there are changes
-$ docker-compose up --build
+1. Go to **Configuration** → **Data Sources**.
+2. Click **Add Data Source**, select **Prometheus**, and set the URL to `http://prometheus:9090`.
+3. Save and test the connection.
+  
+You can create custom dashboards by referencing [Grafana Dashboards](https://grafana.com/grafana/dashboards/).
 
-# View logs for all services
-$ docker-compose logs -f
+---
 
-# Check running containers
-$ docker ps -a
-```
+## 🗃️ **Logs**
 
-## Test
+- Application logs are stored in the `/logs` directory.
+- The logger captures details like **request paths**, **methods**, **status codes**, and **response times**.
 
-```bash
-# Run unit tests
-$ npm run test
+---
 
-# Run e2e tests
-$ npm run test:e2e
+## 📈 **Monitoring Metrics**
 
-# Check test coverage
-$ npm run test:cov
-```
+Access application metrics via the `/metrics` endpoint of your running NestJS application. Prometheus collects these metrics, and Grafana visualizes them for you.
+
+---
+
+## ⚡ **Cache Interceptor**
+
+The `ClientControlledCacheInterceptor` efficiently handles response caching based on `Cache-Control` headers provided by the client, using MD5 hashing to generate unique cache keys.
+
+---
+
+## 📜 **Swagger Documentation**
+
+Swagger provides auto-generated REST API documentation at `http://localhost:${PORT}/api`. This documentation is based on the decorators used in the application and will auto-update as your app evolves.
+
+---
+
+## 🚀 **GraphQL Integration**
+
+You can interact with your GraphQL schema using the endpoint `http://localhost:${PORT}/graphql`, which offers a playground interface. The schema is auto-generated using Apollo Server.
+
+---
+
+## 🔑 **Hashing with Bcrypt**
+
+For secure password handling, the boilerplate integrates `bcrypt` for hashing:
+
+- **hash(data)**: Hashes passwords before storing them in the database.
+- **compare(data, encrypted)**: Validates the password by comparing hashed data.
+
+---
+
+## 🧩 **Adding New Modules**
+
+You can find reusable modules in our 📦 **[CoE's Project Sample](https://git.geekyants.com/geekyants/coe-grp/project-sample/-/tree/main/Monolith/apps/backend?ref_type=heads)** repository. Follow the steps below to add new modules to your NestJS application:
+
+### 🌟 **Step-by-Step Process to Add Modules**
+
+1. **Identify Your Required Module** 🔍
+   - For instance, if you want to add an **SMS** module, locate the `Sms/` folder in the CoE's project sample repository under the `src/` directory.
+
+2. **Copy the Module** 📂
+   - Copy the entire `Sms/` folder and place it into the `src/` directory of your NestJS project.
+
+3. **Update Environment Variables** 🌐
+   - Refer to the `.env.example` file in the sample repository for any required environment variables.
+   - Example variables for SMS:
+
+     ```bash
+     # SMS Configuration
+     TWILIO_ACCOUNT_SID=ACXXXXXXXXX
+     TWILIO_AUTH_TOKEN=XXXXXXXXX
+     TWILIO_SOURCE_NUMBER="+16518675309"
+     ```
+
+   - Add these to your `.env` file with actual values.
+
+4. **Configure the Module** ⚙️
+   - Add the environment variables to your `env.config.ts` file inside the `config/` module.
+   - Register them in `envConfig.module.ts` and validate them using Joi in the `validationSchema` object.
+
+5. **Manage Dependencies** 🧱
+   - If the module has dependencies (e.g., **DB**), copy the corresponding module from the project sample, keeping only relevant data.
+
+6. **Database Configuration** 🛠️
+   - Ensure the DB is set up correctly by adding the necessary DB image in your `docker-compose.yml` file, especially if there isn’t an existing connection URL.
+
+Following these steps will integrate your new module seamlessly within your NestJS application! 🎉
+
+---
+
+## 📚 **Module Integration Guides**
+
+Below are links to detailed guides for integrating common modules:
+
+1. 🔑 **[Auth Module](/docs/backend/Monolith/NestJs/Authentication#how-to-add-in-existing-application)**
+2. 🔒 **[Authorization Module](docs/backend/Monolith/NestJs/Authorization#how-to-add-in-existing-application)**
+3. 📤 **[Media Upload Module](/docs/backend/Monolith/NestJs/FileStorage#how-to-add-in-existing-application)**
+4. 📧 **[Email Module](/docs/backend/Monolith/NestJs/Email#how-to-add-in-existing-application)**
+5. 📲 **[SMS Module](/docs/backend/Monolith/NestJs/Sms#how-to-add-in-existing-application)**
+
+These guides provide detailed steps on how to add the module, what dependencies are needed, and how to configure everything.
