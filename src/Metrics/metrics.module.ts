@@ -1,4 +1,4 @@
-import { PlainTextScalar } from '@common/Scalars/PlainTextScalar';
+import { PlainTextScalar } from '@common/scalars/plain-text.scalar';
 import { MetricsController } from '@metrics/metrics.controller';
 import { MetricsResolver } from '@metrics/metrics.resolver';
 import { MetricsService } from '@metrics/metrics.service';

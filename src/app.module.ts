@@ -1,6 +1,6 @@
-import { TransformInterceptor } from '@common/Interceptor/transform.interceptor';
-import { MetricsMiddleware } from '@common/Middlewares/metrics.middleware';
-import { EnvConfigModule } from '@config/envConfig.module';
+import { TransformInterceptor } from '@common/interceptor/transform.interceptor';
+import { MetricsMiddleware } from '@common/middlewares/metrics.middleware';
+import { EnvConfigModule } from '@config/env-config.module';
 import { MetricsModule } from '@metrics/metrics.module';
 import { ApolloDriver } from '@nestjs/apollo';
 import { CacheModule } from '@nestjs/cache-manager';

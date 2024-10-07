@@ -1,4 +1,4 @@
-import { ApiResponse } from '@common/Dto/apiResponse';
+import { ApiResponse } from '@common/dto/api-response';
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';

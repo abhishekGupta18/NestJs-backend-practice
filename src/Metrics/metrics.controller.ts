@@ -1,4 +1,4 @@
-import { ResponseUtil } from '@common/Helpers/response.utils';
+import { ResponseUtil } from '@common/helpers/response.utils';
 import { MetricsService } from '@metrics/metrics.service';
 import { Controller, Get, Header } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';

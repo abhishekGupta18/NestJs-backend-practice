@@ -1,4 +1,4 @@
-import { ApiResponse } from '@common/Dto/apiResponse';
+import { ApiResponse } from '@common/dto/api-response';
 import { ArgumentsHost, Catch, ExceptionFilter, ForbiddenException, HttpException, HttpStatus } from '@nestjs/common';
 import { Response } from 'express';
 

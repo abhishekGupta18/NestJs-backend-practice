@@ -20,9 +20,9 @@
     "noFallthroughCasesInSwitch": false,
     "baseUrl": "./src",
     "paths": {
-      "@common/*": ["Common/*"],
-      "@config/*": ["Config/*"],
-      "@metrics/*": ["Metrics/*"]
+      "@common/*": ["common/*"],
+      "@config/*": ["config/*"],
+      "@metrics/*": ["metrics/*"]
     }
   }
 }

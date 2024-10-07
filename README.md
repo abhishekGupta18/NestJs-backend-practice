@@ -9,7 +9,7 @@ Welcome to the **NestJS Boilerplate** documentation. This guide will help you se
 Before you start, ensure that you have the following prerequisites:
 
 - **Node.js**: Minimum version should be **18 & above**.
-- **Docker CLI**, **Docker Compose**, and **Colima** (or an equivalent Docker engine) installed on your system.
+- **Docker CLI**, **Docker Compose**, and **Colima** (or an equivalent Docker engine - **Rancher Desktop** is one alternative to **Docker Desktop**) installed on your system.
 - Start the Docker engine using:
   
   ```bash
@@ -107,10 +107,10 @@ You can find reusable modules in our 📦 **[CoE's Project Sample](https://git.g
 ### 🌟 **Step-by-Step Process to Add Modules**
 
 1. **Identify Your Required Module** 🔍
-   - For instance, if you want to add an **SMS** module, locate the `Sms/` folder in the CoE's project sample repository under the `src/` directory.
+   - For instance, if you want to add an **SMS** module, locate the `sms/` folder in the CoE's project sample repository under the `src/` directory.
 
 2. **Copy the Module** 📂
-   - Copy the entire `Sms/` folder and place it into the `src/` directory of your NestJS project.
+   - Copy the entire `sms/` folder and place it into the `src/` directory of your NestJS project.
 
 3. **Update Environment Variables** 🌐
    - Refer to the `.env.example` file in the sample repository for any required environment variables.
@@ -127,7 +127,7 @@ You can find reusable modules in our 📦 **[CoE's Project Sample](https://git.g
 
 4. **Configure the Module** ⚙️
    - Add the environment variables to your `env.config.ts` file inside the `config/` module.
-   - Register them in `envConfig.module.ts` and validate them using Joi in the `validationSchema` object.
+   - Register them in `env-config.module.ts` and validate them using Joi in the `validationSchema` object.
 
 5. **Manage Dependencies** 🧱
    - If the module has dependencies (e.g., **DB**), copy the corresponding module from the project sample, keeping only relevant data.
