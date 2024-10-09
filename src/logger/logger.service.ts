@@ -1,0 +1,145 @@
+import { EnvConfig } from '@config/env.config';
+import { Injectable, Scope } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
+import * as CircuitBreaker from 'opossum';
+import { createLogger, format, transports, Logger as WinstonLogger } from 'winston';
+import * as DailyRotateFile from 'winston-daily-rotate-file';
+
+@Injectable({ scope: Scope.TRANSIENT })
+export class LoggerService {
+  private logger: WinstonLogger;
+  private lokiPort: number = 3100;
+  private logQueue: any[] = [];
+  private flushInterval = 5000; // 5 seconds
+  private breaker: CircuitBreaker;
+  private circuitOptions = {
+    timeout: 5000, // If the function takes longer than 5 seconds, it will timeout
+    errorThresholdPercentage: 50, // If 50% of requests fail, the breaker will open
+    resetTimeout: 10000, // After 10 seconds, try again
+  };
+
+  constructor(private readonly configService: ConfigService<EnvConfig>) {
+    // Enable logging only in non-production environments
+    const environment = this.configService.get<string>('NODE_ENV');
+    const lokiAPI = this.configService.get<string>('LOKI_API_TOKEN');
+    const lokiPORT = this.configService.get<string>('LOKI_PORT');
+    this.lokiPort = parseInt(lokiPORT, 10);
+    const isProduction = environment === 'production';
+
+    // Create Winston logger with configuration
+    this.logger = createLogger({
+      level: isProduction ? 'warn' : 'debug',
+      format: format.combine(
+        format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        format.printf(({ timestamp, level, message, context }) => {
+          return `${timestamp} [${level}] [${context || 'App'}]: ${message}`;
+        })
+      ),
+      transports: [
+        new transports.Console({
+          format: format.combine(
+            format.colorize(),
+            format.printf(({ timestamp, level, message, context }) => {
+              return `${timestamp} [${level}] [${context || 'App'}]: ${message}`;
+            })
+          ),
+        }),
+        new DailyRotateFile({
+          filename: 'logs/application-%DATE%.log',
+          datePattern: 'YYYY-MM-DD',
+          zippedArchive: true,
+          maxSize: '20m',
+          maxFiles: isProduction ? '30d' : '1d',
+        }),
+      ],
+    });
+
+    // Start the log flusher
+    this.startLogFlusher(lokiAPI);
+
+    this.logger.on('data', (log) => {
+      this.addToLogQueue(log);
+    });
+
+    // Handle graceful shutdown
+    process.on('SIGTERM', async () => {
+      await this.sendBatchToPromtail(lokiAPI); // Flush any remaining logs
+      process.exit(0);
+    });
+
+    // Create the circuit breaker to wrap the sendBatchToPromtail method
+    this.breaker = new CircuitBreaker(this.sendBatchToPromtail.bind(this), this.circuitOptions);
+    this.breaker.on('open', () => console.warn('Circuit breaker opened for sendBatchToPromtail'));
+    this.breaker.on('halfOpen', () => console.info('Circuit breaker is half-open, trying to send logs again'));
+    this.breaker.on('close', () => console.info('Circuit breaker closed, normal operation resumed'));
+  }
+
+  private addToLogQueue(log: any) {
+    this.logQueue.push(log);
+  }
+
+  private startLogFlusher(lokiAPI: string) {
+    setInterval(() => {
+      if (this.logQueue.length > 0) {
+        this.breaker.fire(lokiAPI).catch((error) => {
+          console.error('Circuit breaker prevented sending logs:', error.message);
+        });
+      }
+    }, this.flushInterval);
+  }
+
+  private async sendBatchToPromtail(lokiAPI: string) {
+    const logsToSend = [...this.logQueue];
+    try {
+      this.logQueue = []; // Clear the queue after copying
+
+      await axios.post(
+        `http://127.0.0.1:${this.lokiPort}/loki/api/v1/push`,
+        {
+          streams: [
+            {
+              stream: { service: 'nestjs-boilerplate' },
+              values: logsToSend.map((log) => [`${Date.now() * 1e6}`, log.message]),
+            },
+          ],
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${lokiAPI}`,
+          },
+        }
+      );
+    } catch (error) {
+      console.error('Failed to send batch logs to Promtail:', error.message);
+      // Optionally, re-add logs to queue if sending failed
+      this.logQueue.push(...logsToSend);
+      throw error; // Throw error to let the circuit breaker handle it
+    }
+  }
+
+  // Custom error log
+  error(message: string, trace?: string, context?: string) {
+    this.logger.error({ message, trace, context });
+  }
+
+  // Custom warning log
+  warn(message: string, context?: string) {
+    this.logger.warn({ message, context });
+  }
+
+  // Custom general log
+  log(message: string, context?: string) {
+    this.logger.info({ message, context });
+  }
+
+  // Additional debug log method
+  debug(message: string, context?: string) {
+    this.logger.debug({ message, context });
+  }
+
+  // HTTP request/response logging method
+  http(message: string, context?: string) {
+    this.logger.info({ message, context: context || 'HTTP' });
+  }
+}

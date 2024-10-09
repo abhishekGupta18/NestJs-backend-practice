@@ -1,20 +1,35 @@
 import { HttpExceptionFilter } from '@common/filters/http-exception.filter';
-import { LoggerService } from '@common/logger/logger.service';
+import { LoggerService } from '@logger/logger.service';
 import { Logger, ValidationPipe } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as bodyParser from 'body-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     snapshot: false, // true - Enable Debugging
-    logger: new LoggerService(new ConfigService()),
   });
+
+  const logger = await app.resolve(LoggerService);
+  app.useLogger(logger);
+
+  // Apply Helmet Middleware for setting security-related HTTP headers
+  app.use(helmet());
+
+  // Enable CORS with specific settings
   app.enableCors({
+    // origin: ['https://my-domain.com'], // Specify allowed origins
     origin: '*',
-    credentials: true,
+    credentials: true, // Include credentials in CORS requests
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS', // Allowed HTTP methods
+    allowedHeaders: 'Content-Type, Accept, Authorization', // Allowed headers
   });
+
+  // Limit Request Size to 1MB
+  app.use(bodyParser.json({ limit: '1mb' }));
+  app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
 
   const config = new DocumentBuilder()
     .setTitle('Geek Framework')
@@ -24,15 +39,24 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
+
+  // Use global filters and pipes
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: false,
+      whitelist: true, // Automatically remove non-whitelisted properties
+      forbidNonWhitelisted: true, // Return an error for non-whitelisted properties
+      transform: true, // Transform plain input objects to class instances
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
     })
   );
+
   const port = process.env.PORT || 3000; // Use the PORT environment variable or default to 3000
   await app.listen(port, '0.0.0.0');
   const appUrl = await app.getUrl();
   Logger.log(`App is running on ${appUrl}`, 'Geek Framework');
 }
+
 bootstrap();

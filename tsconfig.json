@@ -22,7 +22,8 @@
     "paths": {
       "@common/*": ["common/*"],
       "@config/*": ["config/*"],
-      "@metrics/*": ["metrics/*"]
+      "@metrics/*": ["metrics/*"],
+      "@logger/*": ["logger/*"]
     }
   }
 }

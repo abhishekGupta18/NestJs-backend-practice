@@ -14,6 +14,8 @@ const envConfig = registerAs(
       PROMETHEUS_PORT: parseInt(process.env.PROMETHEUS_PORT, 10),
       GRAFANA_PORT: parseInt(process.env.GRAFANA_PORT, 10),
       GRAFANA_ADMIN_PASSWORD: process.env.GRAFANA_ADMIN_PASSWORD,
+      LOKI_PORT: parseInt(process.env.LOKI_PORT, 10),
+      LOKI_API_TOKEN: process.env.LOKI_API_TOKEN,
     }) as EnvConfig
 );
 
@@ -25,6 +27,8 @@ const validationSchema = Joi.object({
   PROMETHEUS_PORT: Joi.number().port().allow(null),
   GRAFANA_PORT: Joi.number().port().allow(null),
   GRAFANA_ADMIN_PASSWORD: Joi.string().allow(null, ''),
+  LOKI_PORT: Joi.number().port().allow(null),
+  LOKI_API_TOKEN: Joi.string().allow(null, ''),
 });
 
 @Module({

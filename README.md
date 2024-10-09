@@ -4,7 +4,7 @@ Welcome to the **NestJS Boilerplate** documentation. This guide will help you se
 
 ---
 
-## 🛠️ **Setup**
+## 🚧 **Setup**
 
 Before you start, ensure that you have the following prerequisites:
 
@@ -18,7 +18,7 @@ Before you start, ensure that you have the following prerequisites:
 
 - Create a `.env` file in the root of your project. Copy the contents from `.env.example` and replace them with actual values to avoid runtime issues.
 
-> 💡 **Note:** We have integrated **Prometheus** and **Grafana** for Application Performance Monitoring (APM) to help you monitor and visualize metrics in your NestJS application.
+> 💡 **Note:** We have integrated **Prometheus**, **Grafana**, **Loki**, and **Promtail** for Application Performance Monitoring (APM) and centralized logging to help you monitor and visualize metrics in your NestJS application.
 
 ---
 
@@ -50,26 +50,27 @@ Once the Docker services are up, you can access the following tools:
   > - **Username**: `admin`
   > - **Password**: `{GRAFANA_ADMIN_PASSWORD}` (from your `.env` file)
 
-### 🎛️ **Setting up Prometheus in Grafana:**
+### 🏡 **Setting up Prometheus and Loki in Grafana:**
 
 1. Go to **Configuration** → **Data Sources**.
-2. Click **Add Data Source**, select **Prometheus**, and set the URL to `http://prometheus:9090`.
-3. Save and test the connection.
-  
-You can create custom dashboards by referencing [Grafana Dashboards](https://grafana.com/grafana/dashboards/).
+2. Click **Add Data Source**, select **Prometheus**, and set the URL to `http://prometheus:9090`. Save and test the connection.
+3. Click **Add Data Source** again, select **Loki**, and set the URL to `http://loki:3100`. Save and test the connection.
+4. To create a log panel in Grafana, navigate to **Create** → **Dashboard** → **Add New Panel**, and select **Loki** as the data source to query application logs.
+5. Here's the sample [log dashboard](https://grafana.com/grafana/dashboards/13359-logs/) which can be used to copy template ID and import in Grafana.
 
 ---
 
-## 🗃️ **Logs**
+## 📃 **Logs**
 
 - Application logs are stored in the `/logs` directory.
 - The logger captures details like **request paths**, **methods**, **status codes**, and **response times**.
+- With **Promtail** and **Loki** integration, logs are shipped to **Grafana**, where you can view and analyze them effectively.
 
 ---
 
 ## 📈 **Monitoring Metrics**
 
-Access application metrics via the `/metrics` endpoint of your running NestJS application. Prometheus collects these metrics, and Grafana visualizes them for you.
+Access application metrics via the `/metrics` endpoint of your running NestJS application. **Prometheus** collects these metrics, and **Grafana** visualizes them for you.
 
 ---
 
@@ -79,7 +80,7 @@ The `ClientControlledCacheInterceptor` efficiently handles response caching base
 
 ---
 
-## 📜 **Swagger Documentation**
+## 🐝 **Swagger Documentation**
 
 Swagger provides auto-generated REST API documentation at `http://localhost:${PORT}/api`. This documentation is based on the decorators used in the application and will auto-update as your app evolves.
 
@@ -129,7 +130,7 @@ You can find reusable modules in our 📦 **[CoE's Project Sample](https://git.g
    - Add the environment variables to your `env.config.ts` file inside the `config/` module.
    - Register them in `env-config.module.ts` and validate them using Joi in the `validationSchema` object.
 
-5. **Manage Dependencies** 🧱
+5. **Manage Dependencies** 🫡
    - If the module has dependencies (e.g., **DB**), copy the corresponding module from the project sample, keeping only relevant data.
 
 6. **Database Configuration** 🛠️
@@ -146,7 +147,7 @@ Below are links to detailed guides for integrating common modules:
 1. 🔑 **[Auth Module](https://coe.geekyants.com/docs/backend/Monolith/NestJs/Authentication#how-to-add-in-existing-application)**
 2. 🔒 **[Authorization Module](https://coe.geekyants.comdocs/backend/Monolith/NestJs/Authorization#how-to-add-in-existing-application)**
 3. 📤 **[Media Upload Module](https://coe.geekyants.com/docs/backend/Monolith/NestJs/FileStorage#how-to-add-in-existing-application)**
-4. 📧 **[Email Module](https://coe.geekyants.com/docs/backend/Monolith/NestJs/Email#how-to-add-in-existing-application)**
-5. 📲 **[SMS Module](https://coe.geekyants.com/docs/backend/Monolith/NestJs/Sms#how-to-add-in-existing-application)**
+4. 🛠 **[Email Module](https://coe.geekyants.com/docs/backend/Monolith/NestJs/Email#how-to-add-in-existing-application)**
+5. 📱 **[SMS Module](https://coe.geekyants.com/docs/backend/Monolith/NestJs/Sms#how-to-add-in-existing-application)**
 
 These guides provide detailed steps on how to add the module, what dependencies are needed, and how to configure everything.

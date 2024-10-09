@@ -28,4 +28,12 @@ export class EnvConfig {
   @IsNotEmpty()
   @IsString()
   GRAFANA_ADMIN_PASSWORD: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  LOKI_PORT: number;
+
+  @IsNotEmpty()
+  @IsString()
+  LOKI_API_TOKEN: string;
 }
