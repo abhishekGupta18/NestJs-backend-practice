@@ -1,3 +1,4 @@
+import { RouteNames } from '@common/route-names';
 import { PlainTextScalar } from '@common/scalars/plain-text.scalar';
 import { MetricsController } from '@metrics/metrics.controller';
 import { MetricsResolver } from '@metrics/metrics.resolver';
@@ -11,7 +12,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
       defaultMetrics: {
         enabled: true,
       },
-      path: '/metrics',
+      path: `/${RouteNames.METRICS}`,
     }),
   ],
   providers: [MetricsService, MetricsResolver, PlainTextScalar],

@@ -21,9 +21,15 @@
     "baseUrl": "./src",
     "paths": {
       "@common/*": ["common/*"],
+      "@middlewares/*": ["middlewares/*"],
+      "@interceptors/*": ["interceptors/*"],
       "@config/*": ["config/*"],
-      "@metrics/*": ["metrics/*"],
-      "@logger/*": ["logger/*"]
+      "@logger/*": ["logger/*"],
+      "@db/*": ["db/*"],
+      "@bg/*": ["background/*"],
+      "@email-queue/*": ["background/queue/email/*"],
+      "@metrics/*": ["api/metrics/*"],
+      "@health/*": ["api/health/*"]
     }
   }
 }

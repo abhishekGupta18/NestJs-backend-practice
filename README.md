@@ -30,11 +30,17 @@ Follow these steps to start your application:
 # 1️⃣ Install dependencies
 $ yarn install
 
-# 2️⃣ Start Docker services (Prometheus and Grafana)
-$ docker compose up -d
+# 2️⃣ Start Docker services
+$ yarn db:dev:up
 
-# 3️⃣ Start the NestJS app in development mode
+# 3️⃣ Run Migrations & Seeds
+$ yarn prisma:setup
+
+# 4️⃣ Start the NestJS app in development mode
 $ yarn start:dev
+
+# 5️⃣ Stop Docker services
+$ yarn db:dev:rm
 ```
 
 ---
