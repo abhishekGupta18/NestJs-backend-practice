@@ -1,3 +1,5 @@
+import { BackgroundModule } from '@bg/background.module';
+import { QueuePrefix } from '@bg/constants/job.constant';
 import { EnvConfigModule } from '@config/env-config.module';
 import { EnvConfig } from '@config/env.config';
 import { DBModule } from '@db/db.module';
@@ -31,11 +33,21 @@ const queueModule = BullModule.forRootAsync({
     console.log(`Connecting to Redis at ${redisHost}:${redisPort} with TLS: ${redisTlsEnabled}`);
 
     return {
+      prefix: QueuePrefix.AUTH,
       connection: {
         host: redisHost,
         port: redisPort,
         password: redisPassword,
         tls: redisTlsEnabled ? {} : undefined, // If TLS is enabled, configure it here
+      },
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 1000,
+        },
+        removeOnComplete: true,
+        removeOnFail: false,
       },
     };
   },
@@ -90,6 +102,8 @@ const graphqlModule = GraphQLModule.forRoot({
     EventEmitterModule.forRoot(),
     queueModule,
     DBModule,
+    // Background Workers
+    BackgroundModule,
     // APIs
     MetricsModule,
     HealthModule,

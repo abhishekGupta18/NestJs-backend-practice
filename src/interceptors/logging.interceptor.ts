@@ -14,9 +14,9 @@ export class HttpLoggingInterceptor implements NestInterceptor {
     const response = httpContext.getResponse<Response>();
 
     const { method, url, httpVersion, headers, body, query } = request;
-    const remoteAddr = request.ip || request.connection.remoteAddress;
-    const userAgent = headers['user-agent'] || '';
-    const referrer = headers['referer'] || '';
+    const remoteAddr = request.ip || request.socket.remoteAddress;
+    const userAgent = headers['user-agent'] || 'unknown';
+    const referrer = headers['referer'] || headers['referrer'] || 'No Referer';
     const startTime = new Date().toISOString();
     const startTimestamp = Date.now();
 
@@ -26,7 +26,7 @@ export class HttpLoggingInterceptor implements NestInterceptor {
         const endTime = new Date().toISOString();
         const responseTime = endTimestamp - startTimestamp;
         const { statusCode } = response;
-        const contentLength = response.get('content-length') || '0';
+        const contentLength = response.get('content-length') || 'unknown';
 
         // Log a single combined message with all request and response details
         this.logger.http(

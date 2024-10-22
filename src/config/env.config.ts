@@ -76,4 +76,12 @@ export class EnvConfig {
   @IsNotEmpty()
   @IsString()
   DATABASE_URL: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  DEFAULT_PAGE: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  DEFAULT_PAGE_SIZE: number;
 }

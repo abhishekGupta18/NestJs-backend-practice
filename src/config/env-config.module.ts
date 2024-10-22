@@ -26,6 +26,8 @@ const envConfig = registerAs(
       POSTGRES_HOST: process.env.POSTGRES_HOST,
       POSTGRES_PORT: parseInt(process.env.POSTGRES_PORT, 10),
       DATABASE_URL: process.env.DATABASE_URL,
+      DEFAULT_PAGE: parseInt(process.env.DEFAULT_PAGE, 10),
+      DEFAULT_PAGE_SIZE: parseInt(process.env.DEFAULT_PAGE_SIZE, 10),
     }) as EnvConfig
 );
 
@@ -56,6 +58,8 @@ const validationSchema = Joi.object({
       'string.pattern.base': 'DATABASE_URL must start with "postgresql://"',
       'string.empty': 'DATABASE_URL is required',
     }),
+  DEFAULT_PAGE: Joi.number().default(1),
+  DEFAULT_PAGE_SIZE: Joi.number().default(10),
 });
 
 @Module({

@@ -1,22 +1,40 @@
-import { QueueName, QueuePrefix } from '@bg/constants/job.constant';
+import { QueueName } from '@bg/constants/job.constant';
+// import { EmailService } from '@email/email.service';
+// import { SendgridProvider } from '@email/providers/send-grid.provider';
 import { EmailQueueEvents } from '@email-queue/email-queue.events';
 import { EmailQueueService } from '@email-queue/email-queue.service';
 import { EmailProcessor } from '@email-queue/email.processor';
+import { EmailQueue } from '@email-queue/email.queue';
 import { BullModule } from '@nestjs/bullmq';
-import { Module } from '@nestjs/common';
+import { Injectable, Module } from '@nestjs/common';
 
-@Module({
-  imports: [
-    BullModule.registerQueue({
+@Injectable()
+export class EmailQueueConfig {
+  static getQueueConfig() {
+    return BullModule.registerQueue({
       name: QueueName.EMAIL,
-      prefix: QueuePrefix.AUTH,
       streams: {
         events: {
           maxLen: 1000,
         },
       },
-    }),
+    });
+  }
+}
+
+@Module({
+  imports: [EmailQueueConfig.getQueueConfig()],
+  providers: [
+    EmailQueueService,
+    EmailProcessor,
+    EmailQueueEvents,
+    EmailQueue,
+    // EmailService,
+    // {
+    //   provide: 'EmailProvider',
+    //   useClass: SendgridProvider,
+    // },
   ],
-  providers: [EmailQueueService, EmailProcessor, EmailQueueEvents],
+  exports: [EmailQueue],
 })
 export class EmailQueueModule {}

@@ -2,9 +2,9 @@ import { QueueName } from '@bg/constants/job.constant';
 import { OnQueueEvent, QueueEventsHost, QueueEventsListener } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 
-@QueueEventsListener(QueueName.EMAIL)
-export class EmailQueueEvents extends QueueEventsHost {
-  private readonly logger = new Logger(EmailQueueEvents.name);
+@QueueEventsListener(QueueName.CRON)
+export class CronQueueEvents extends QueueEventsHost {
+  private readonly logger = new Logger(CronQueueEvents.name);
 
   @OnQueueEvent('added')
   onAdded(job: { jobId: string; name: string }) {

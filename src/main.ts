@@ -32,6 +32,11 @@ async function bootstrap() {
   app.use(bodyParser.json({ limit: '1mb' }));
   app.use(bodyParser.urlencoded({ limit: '1mb', extended: true }));
 
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
+
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
       .setTitle('Geek Framework')
@@ -55,9 +60,6 @@ async function bootstrap() {
       },
     })
   );
-  app.enableVersioning({
-    type: VersioningType.URI,
-  });
 
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');

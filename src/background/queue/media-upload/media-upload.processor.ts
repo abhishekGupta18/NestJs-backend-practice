@@ -1,11 +1,11 @@
 import { JobName, QueueName } from '@bg/constants/job.constant';
-import { IEmailJob, IOtpEmailJob } from '@bg/interfaces/job.interface';
-import { EmailQueueService } from '@email-queue/email-queue.service';
+import { IMediaUploadJob } from '@bg/interfaces/job.interface';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
+import { MediaUploadQueueService } from './media-upload-queue.service';
 
-@Processor(QueueName.EMAIL, {
+@Processor(QueueName.MEDIA_UPLOAD, {
   concurrency: 1,
   drainDelay: 300,
   stalledInterval: 300000,
@@ -17,25 +17,26 @@ import { Job } from 'bullmq';
     max: 1,
     duration: 150,
   },
-  // settings: {
-  //   backoffStrategy: (attempts: number) => {
-  //     return Math.pow(2, attempts) * 1000;
-  //   },
-  // },
 })
-export class EmailProcessor extends WorkerHost {
-  private readonly logger = new Logger(EmailProcessor.name);
-  constructor(private readonly emailQueueService: EmailQueueService) {
+export class MediaUploadProcessor extends WorkerHost {
+  private readonly logger = new Logger(MediaUploadProcessor.name);
+  constructor(private readonly mediaUploadQueueService: MediaUploadQueueService) {
     super();
   }
-  async process(job: Job<IEmailJob, any, string>, _token?: string): Promise<any> {
-    this.logger.debug(`Processing job ${job.id} of type ${job.name} with data ${JSON.stringify(job.data)}...`);
 
-    switch (job.name) {
-      case JobName.OTP_EMAIL_VERIFICATION:
-        return await this.emailQueueService.sendOtpEmail(job.data as unknown as IOtpEmailJob);
-      default:
-        throw new Error(`Unknown job name: ${job.name}`);
+  async process(job: Job<IMediaUploadJob, any, string>, _token?: string): Promise<any> {
+    try {
+      this.logger.debug(`Processing job ${job.id} of type ${job.name} with data ${JSON.stringify(job.data)}...`);
+
+      switch (job.name) {
+        case JobName.BG_UPLOAD_MEDIA:
+          return await this.mediaUploadQueueService.uploadMedia(job.data as unknown as IMediaUploadJob);
+        default:
+          throw new Error(`Unknown job name: ${job.name}`);
+      }
+    } catch (error) {
+      this.logger.error(`Failed to process job ${job.id}: ${error.message}`);
+      throw error;
     }
   }
 

@@ -18,6 +18,7 @@
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",
+    "allow:permission": "sudo chmod -R 777 ./data",
     "db:dev:rm": "docker-compose down --volumes --remove-orphans",
     "db:dev:up": "docker-compose up -d",
     "test:cov": "jest --coverage",

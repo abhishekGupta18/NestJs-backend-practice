@@ -27,7 +27,9 @@
       "@logger/*": ["logger/*"],
       "@db/*": ["db/*"],
       "@bg/*": ["background/*"],
+      "@cron/*": ["background/cron/*"],
       "@email-queue/*": ["background/queue/email/*"],
+      "@media-upload-queue/*": ["background/queue/media-upload/*"],
       "@metrics/*": ["api/metrics/*"],
       "@health/*": ["api/health/*"]
     }
