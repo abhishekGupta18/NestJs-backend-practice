@@ -1,4 +1,5 @@
 import { HttpExceptionFilter } from '@common/filters/http-exception.filter';
+import { RouteNames } from '@common/route-names';
 import { LoggerService } from '@logger/logger.service';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
@@ -45,7 +46,7 @@ async function bootstrap() {
       // .addBearerAuth()
       .build();
     const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
+    SwaggerModule.setup(RouteNames.API_DOCS, app, document);
   }
 
   // Use global filters and pipes

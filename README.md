@@ -17,6 +17,7 @@ Before you start, ensure that you have the following prerequisites:
   ```
 
 - Create a `.env` file in the root of your project. Copy the contents from `.env.example` and replace them with actual values to avoid runtime issues.
+- We have integarted background workers using **Redis Queues**, If you wish not to use any background workers, The respective directory & it's dependencies can be removed directly. `/redis` directory is still needed for cacheing.
 
 > 💡 **Note:** We have integrated **Prometheus**, **Grafana**, **Loki**, and **Promtail** for Application Performance Monitoring (APM) and centralized logging to help you monitor and visualize metrics in your NestJS application.
 
@@ -42,6 +43,35 @@ $ yarn start:dev
 # 5️⃣ Stop Docker services
 $ yarn db:dev:rm
 ```
+
+---
+
+## 🧪 **Automatic Testing with Dredd**
+
+Once your backend is fully running and Swagger is accessible, you can use **Dredd** to automate API testing against your OpenAPI specification. This ensures that your API endpoints behave as expected and conform to the documented contract.
+
+### Running Dredd Tests
+
+After the backend server is up and Swagger is accessible, simply run:
+
+```bash
+npm run test
+```
+
+This command will:
+
+1. **Generate the OpenAPI Specification** by fetching the Swagger JSON from `http://localhost:${PORT}/api-json`.
+2. **Execute Dredd Tests** using this OpenAPI spec to validate that the endpoints' responses match the expected definitions in the specification.
+
+> **Note:** Ensure your server is fully running and accessible before starting the tests, as Dredd needs to interact with the live API.
+
+### Viewing Test Results
+
+- Test results are displayed directly in the terminal, showing which endpoints passed or failed.
+- If an endpoint’s response doesn’t match the specification (e.g., due to headers, status codes, or body content differences), Dredd will mark it as failed and provide details on discrepancies.
+- `apiary`'s temporary public reporting is also enabled to view the test results for 24 hours & share across team.
+
+For more detailed reports, we can configure Dredd to save or display results in a specific format or integrate it with your CI pipeline.
 
 ---
 

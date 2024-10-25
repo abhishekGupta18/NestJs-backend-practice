@@ -1,4 +1,5 @@
 import { ApiResponse } from '@common/dto/api-response';
+import { RouteNames } from '@common/route-names';
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -10,23 +11,26 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
     if (context.getType() === 'http') {
       const request = context.switchToHttp().getRequest();
 
-      // Exclude /metrics endpoint from custom transformation
-      if (request.url === '/metrics') {
-        // Skip transformation and return raw response
+      // Exclude specific routes
+      if (request.url.includes(RouteNames.METRICS) || request.url.includes(RouteNames.HEALTH)) {
         return next.handle();
       }
 
       return next.handle().pipe(
-        map((data) => ({
-          statusCode: data.statusCode ? data.statusCode : context.switchToHttp().getResponse().statusCode,
-          status: data.status || 'Success',
-          message: data.message || 'Request successful',
-          data: data.data || data, // Fallback to the data itself if 'data' property is not present
-          error: data.error || null,
-        }))
+        map((data) => {
+          const response = context.switchToHttp().getResponse();
+          return {
+            statusCode: data.statusCode || response.statusCode,
+            status: data.status || 'Success',
+            message: data.message || 'Request successful',
+            data: data.data || data,
+            error: data.error || null,
+          };
+        })
       );
-    } else if (context.getType().toString() === 'graphql') {
-      // Directly return the response without transformation
+    }
+
+    if (context.getType().toString() === 'graphql') {
       return next.handle().pipe(
         map((data) => ({
           statusCode: 200,
@@ -38,7 +42,6 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
       );
     }
 
-    // Default behavior for other context types (if any)
-    return next.handle();
+    return next.handle(); // For other contexts, pass through without modification
   }
 }

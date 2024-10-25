@@ -13,7 +13,6 @@ export class MetricsController {
   @Get(RouteNames.INCREMENT)
   @ApiOperation({ summary: 'Increment HTTP request counter' })
   @ApiResponse({ status: 200, description: 'HTTP request counter incremented successfully' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
   incrementHttpRequests() {
     this.metricsService.incrementHttpRequests();
     return ResponseUtil.success(null, 'HTTP request counter incremented');
@@ -22,7 +21,6 @@ export class MetricsController {
   @Get(RouteNames.ACTIVE_USERS)
   @ApiOperation({ summary: 'Set active users gauge' })
   @ApiResponse({ status: 200, description: 'Active users gauge set successfully' })
-  @ApiResponse({ status: 500, description: 'Internal server error' })
   setActiveUsers() {
     this.metricsService.setActiveUsers(5);
     return ResponseUtil.success(null, 'Active users gauge set');
@@ -32,7 +30,6 @@ export class MetricsController {
   @Header('Content-Type', 'text/plain')
   @ApiOperation({ summary: 'Get default metrics' })
   @ApiResponse({ status: 200, description: 'Metrics retrieved successfully' })
-  @ApiResponse({ status: 500, description: 'Failed to retrieve metrics' })
   async getDefaultMetrics(): Promise<any> {
     try {
       const metrics = await register.metrics();
