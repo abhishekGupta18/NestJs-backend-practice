@@ -39,7 +39,7 @@ export class ClientControlledCacheInterceptor implements NestInterceptor {
       tap((response) => {
         // Cache the response unless cache control is 'no-cache'.
         if (cacheControl !== 'no-cache') {
-          // Determine the TTL based on cache-control
+          // Determine the TTL(milliseconds) based on cache-control
           const ttl = this.parseCacheControl(cacheControl);
           this.cacheManager.set(key, response, ttl);
         }
@@ -100,25 +100,26 @@ export class ClientControlledCacheInterceptor implements NestInterceptor {
 
   /**
    * Parses the cache-control directive to extract the 'max-age' value and convert it to TTL (Time to Live).
-   * If no valid max-age is found, a default TTL of 300 seconds (5 minutes) is returned.
+   * If no valid max-age is found, a default TTL of 300,000 milliseconds (5 minutes) is returned.
    *
    * @param cacheControl - The cache-control directive from the client request.
-   * @returns number - The TTL (in seconds) to store the cached response.
+   * @returns number - The TTL (in milliseconds) to store the cached response.
    */
   private parseCacheControl(cacheControl: string): number {
-    const defaultTtl = 300; // 5 minutes default TTL
+    const defaultTtlMs = 5 * 60 * 1000; // Default - 5 minutes (milliseconds)
 
-    if (!cacheControl) return defaultTtl;
+    if (!cacheControl) return defaultTtlMs;
 
     // Extract the max-age value from the cache-control directive.
     const maxAgeMatch = cacheControl.match(/max-age=(\d+)/);
 
-    // If max-age is provided and is a valid number, use it as TTL.
+    // If max-age is provided and is a valid number, convert it to milliseconds.
     if (maxAgeMatch && maxAgeMatch[1]) {
-      return parseInt(maxAgeMatch[1], 10);
+      const maxAgeSeconds = parseInt(maxAgeMatch[1], 10);
+      return maxAgeSeconds * 1000; // Convert seconds to milliseconds
     }
 
     // Return the default TTL if no valid max-age is found.
-    return defaultTtl;
+    return defaultTtlMs;
   }
 }

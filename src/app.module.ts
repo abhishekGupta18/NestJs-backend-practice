@@ -11,7 +11,8 @@ import { MetricsModule } from '@metrics/metrics.module';
 import { MetricsMiddleware } from '@middlewares/metrics.middleware';
 import { ApolloDriver } from '@nestjs/apollo';
 import { BullModule } from '@nestjs/bullmq';
-import { CacheModule } from '@nestjs/cache-manager';
+import { CacheModule, CacheStore } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
@@ -80,6 +81,24 @@ const graphqlModule = GraphQLModule.forRoot({
   }),
 });
 
+// Cache Module
+const cacheModule = CacheModule.registerAsync({
+  useFactory: async () => {
+    const store = await redisStore({
+      socket: {
+        host: '127.0.0.1',
+        port: 6379,
+      },
+    });
+
+    return {
+      store: store as unknown as CacheStore,
+      ttl: 5 * 60000, // Default - 5 minutes (milliseconds)
+    };
+  },
+  isGlobal: true,
+});
+
 @Module({
   imports: [
     DevtoolsModule.register({
@@ -87,9 +106,9 @@ const graphqlModule = GraphQLModule.forRoot({
     }),
     rateLimit,
     graphqlModule,
+    cacheModule,
     EnvConfigModule,
     LoggerModule,
-    CacheModule.register({ isGlobal: true }),
     EventEmitterModule.forRoot(),
     queueModule,
     DBModule,
