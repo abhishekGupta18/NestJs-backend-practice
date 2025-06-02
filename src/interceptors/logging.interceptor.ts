@@ -1,15 +1,16 @@
-import { LoggerService } from '@logger/logger.service';
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
+import { LoggerService } from '@logger/logger.service';
+import { getTraceContext } from '@common/helpers/trace-context.util';
 
 @Injectable()
 export class HttpLoggingInterceptor implements NestInterceptor {
   constructor(private readonly logger: LoggerService) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const httpContext = context.switchToHttp();
+  intercept(context_: ExecutionContext, next: CallHandler): Observable<any> {
+    const httpContext = context_.switchToHttp();
     const request = httpContext.getRequest<Request>();
     const response = httpContext.getResponse<Response>();
 
@@ -19,6 +20,8 @@ export class HttpLoggingInterceptor implements NestInterceptor {
     const referrer = headers['referer'] || headers['referrer'] || 'No Referer';
     const startTime = new Date().toISOString();
     const startTimestamp = Date.now();
+    const { traceId, spanId } = getTraceContext();
+    const contextInfo = `[TraceId=${traceId || 'unknown-trace'} | SpanId=${spanId || 'unknown-span'}]`;
 
     return next.handle().pipe(
       tap(() => {
@@ -28,13 +31,14 @@ export class HttpLoggingInterceptor implements NestInterceptor {
         const { statusCode } = response;
         const contentLength = response.get('content-length') || 'unknown';
 
-        // Log a single combined message with all request and response details
         this.logger.http(
-          `HTTP Log - Start Time: ${startTime}, End Time: ${endTime}, Total Duration: ${responseTime}ms\n` +
-            `Remote Address: ${remoteAddr}, Method: ${method}, URL: ${url}, HTTP Version: ${httpVersion}\n` +
+          `HTTP Log ${contextInfo}\n` +
+            `Start: ${startTime}, End: ${endTime}, Duration: ${responseTime}ms\n` +
+            `Remote: ${remoteAddr}, Method: ${method}, URL: ${url}, HTTP/${httpVersion}\n` +
             `User-Agent: ${userAgent}, Referrer: ${referrer}\n` +
-            `Request Body: ${JSON.stringify(body)}, Query Params: ${JSON.stringify(query)}\n` +
-            `Response Status: ${statusCode}, Content Length: ${contentLength}\n`
+            `Body: ${JSON.stringify(body)}, Query: ${JSON.stringify(query)}\n` +
+            `Status: ${statusCode}, Content-Length: ${contentLength}\n`,
+          'HTTP'
         );
       })
     );

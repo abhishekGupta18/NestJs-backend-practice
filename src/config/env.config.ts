@@ -10,16 +10,32 @@ export class EnvConfig {
   NODE_ENV: string;
 
   @IsNotEmpty()
-  @IsBoolean()
-  PROMETHEUS_DEFAULT_METRICS_ENABLED: boolean;
-
-  @IsNotEmpty()
   @IsString()
-  PROMETHEUS_METRICS_PATH: string;
+  CORS_ORIGINS: string;
 
   @IsNotEmpty()
   @IsNumber()
   PROMETHEUS_PORT: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  PROMETHEUS_PUSH_GATEWAY_PORT: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  PROMTAIL_PORT: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  NODE_EXPORTER_PORT: number;
+
+  @IsNotEmpty()
+  @IsString()
+  NESTJS_METRICS_TARGET: string;
+
+  @IsNotEmpty()
+  @IsString()
+  NODE_EXPORTER_TARGET: string;
 
   @IsNotEmpty()
   @IsNumber()
@@ -36,6 +52,30 @@ export class EnvConfig {
   @IsNotEmpty()
   @IsString()
   LOKI_API_TOKEN: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  OTLP_PORT: number;
+
+  @IsNotEmpty()
+  @IsString()
+  OTEL_SERVICE_NAME: string;
+
+  @IsNotEmpty()
+  @IsString()
+  OTEL_EXPORTER_OTLP_ENDPOINT: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  JAEGER_PORT: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  JAEGER_COLLECTOR_PORT: number;
+
+  @IsNotEmpty()
+  @IsString()
+  JAGER_URL: string;
 
   @IsNotEmpty()
   @IsString()
@@ -84,4 +124,20 @@ export class EnvConfig {
   @IsNotEmpty()
   @IsNumber()
   DEFAULT_PAGE_SIZE: number;
+
+  @IsNotEmpty()
+  @IsString()
+  GRAFANA_URL: string;
+
+  @IsNotEmpty()
+  @IsString()
+  APP_LOGS_URL: string;
+
+  @IsNotEmpty()
+  @IsString()
+  DEV_DOCS_URL: string;
+
+  @IsNotEmpty()
+  @IsString()
+  SERVICES_HEALTH_URL: string;
 }

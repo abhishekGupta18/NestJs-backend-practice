@@ -19,7 +19,7 @@ export class HealthService {
     private readonly memory: MemoryHealthIndicator,
     private readonly prisma: PrismaHealthIndicator,
     private readonly redisHealth: RedisHealthIndicator,
-    private readonly db: DBService
+    private readonly db: DBService,
   ) {}
 
   async checkHealth(): Promise<HealthCheckResult> {
@@ -28,7 +28,7 @@ export class HealthService {
       async () => this.prisma.pingCheck('database', this.db),
       async () => this.redisHealth.isHealthy('redis'),
       // () => this.disk.checkStorage('storage', { path: '/', thresholdPercent: 0.45 }), // Unhealthy if less than 45% disk space available.
-      // () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024), // Unhealthy if process does have more than 150MB allocated.
+      () => this.memory.checkHeap('memory_heap', 250 * 1024 * 1024), // Unhealthy if process does have more than 250MB allocated.
     ]);
   }
 }

@@ -1,5 +1,6 @@
+import { getTraceContext } from '@common/helpers/trace-context.util';
 import { EnvConfig } from '@config/env.config';
-import { Injectable, Scope } from '@nestjs/common';
+import { Injectable, Logger, Scope } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import * as CircuitBreaker from 'opossum';
@@ -8,6 +9,7 @@ import * as DailyRotateFile from 'winston-daily-rotate-file';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class LoggerService {
+  private static sigtermListenerAdded = false; // Static flag to track if the listener has been added
   private logger: WinstonLogger;
   private lokiPort: number = 3100;
   private logQueue: any[] = [];
@@ -26,6 +28,8 @@ export class LoggerService {
     const lokiPORT = this.configService.get<string>('LOKI_PORT');
     this.lokiPort = parseInt(lokiPORT, 10);
     const isProduction = environment === 'production';
+    const isStaging = environment === 'staging';
+    const isDevelopment = environment === 'development';
 
     // Create Winston logger with configuration
     this.logger = createLogger({
@@ -50,29 +54,44 @@ export class LoggerService {
           datePattern: 'YYYY-MM-DD',
           zippedArchive: true,
           maxSize: '20m',
-          maxFiles: isProduction ? '30d' : '1d',
+          maxFiles: isProduction ? '15d' : isStaging ? '7d' : '3d',
         }),
       ],
     });
 
-    // Start the log flusher
-    this.startLogFlusher(lokiAPI);
+    if (isDevelopment) {
+      // Start the log flusher
+      this.startLogFlusher(lokiAPI);
 
-    this.logger.on('data', (log) => {
-      this.addToLogQueue(log);
-    });
+      this.logger.on('data', (log) => {
+        this.addToLogQueue(log);
+      });
 
-    // Handle graceful shutdown
-    process.on('SIGTERM', async () => {
-      await this.sendBatchToPromtail(lokiAPI); // Flush any remaining logs
-      process.exit(0);
-    });
+      // Add SIGTERM listener only once (Handle graceful shutdown)
+      if (!LoggerService.sigtermListenerAdded) {
+        process.on('SIGTERM', async () => {
+          await this.sendBatchToPromtail(lokiAPI); // Flush any remaining logs
+          process.exit(0);
+        });
+        LoggerService.sigtermListenerAdded = true; // Mark the listener as added
+      }
 
-    // Create the circuit breaker to wrap the sendBatchToPromtail method
-    this.breaker = new CircuitBreaker(this.sendBatchToPromtail.bind(this), this.circuitOptions);
-    this.breaker.on('open', () => console.warn('Circuit breaker opened for sendBatchToPromtail'));
-    this.breaker.on('halfOpen', () => console.info('Circuit breaker is half-open, trying to send logs again'));
-    this.breaker.on('close', () => console.info('Circuit breaker closed, normal operation resumed'));
+      // Create the circuit breaker to wrap the sendBatchToPromtail method
+      this.breaker = new CircuitBreaker(this.sendBatchToPromtail.bind(this), this.circuitOptions);
+      this.breaker.on('open', () => Logger.warn('Circuit breaker opened for sendBatchToPromtail'));
+      this.breaker.on('halfOpen', () => Logger.log('Circuit breaker is half-open, trying to send logs again'));
+      this.breaker.on('close', () => Logger.log('Circuit breaker closed, normal operation resumed'));
+    } else {
+      Logger.log(`🚀 Loki logging is disabled in ${environment} mode`);
+    }
+  }
+
+  private formatTracePrefix(traceId?: string, spanId?: string): string {
+    let { traceId: traceId_, spanId: spanId_ } = getTraceContext();
+    traceId = traceId || traceId_;
+    spanId = spanId || spanId_;
+    if (!traceId) return '';
+    return `[TraceId=${traceId}${spanId ? ` | SpanId=${spanId}` : ''}] `;
   }
 
   private addToLogQueue(log: any) {
@@ -83,7 +102,7 @@ export class LoggerService {
     setInterval(() => {
       if (this.logQueue.length > 0) {
         this.breaker.fire(lokiAPI).catch((error) => {
-          console.error('Circuit breaker prevented sending logs:', error.message);
+          Logger.error('Circuit breaker prevented sending logs:', error.message);
         });
       }
     }, this.flushInterval);
@@ -99,7 +118,7 @@ export class LoggerService {
         {
           streams: [
             {
-              stream: { service: 'nestjs-boilerplate' },
+              stream: { service: 'backend' },
               values: logsToSend.map((log) => [`${Date.now() * 1e6}`, log.message]),
             },
           ],
@@ -111,7 +130,7 @@ export class LoggerService {
         }
       );
     } catch (error) {
-      console.error('Failed to send batch logs to Promtail:', error.message);
+      Logger.error('Failed to send batch logs to Promtail:', error.message);
       // Optionally, re-add logs to queue if sending failed
       this.logQueue.push(...logsToSend);
       throw error; // Throw error to let the circuit breaker handle it
@@ -119,27 +138,32 @@ export class LoggerService {
   }
 
   // Custom error log
-  error(message: string, trace?: string, context?: string) {
-    this.logger.error({ message, trace, context });
+  error(message: string, trace?: string, context?: string, traceId?: string, spanId?: string) {
+    const prefix = this.formatTracePrefix(traceId, spanId);
+    this.logger.error({ message: `${prefix}${message}`, trace, context });
   }
 
   // Custom warning log
-  warn(message: string, context?: string) {
-    this.logger.warn({ message, context });
+  warn(message: string, context?: string, traceId?: string, spanId?: string) {
+    const prefix = this.formatTracePrefix(traceId, spanId);
+    this.logger.warn({ message: `${prefix}${message}`, context });
   }
 
   // Custom general log
-  log(message: string, context?: string) {
-    this.logger.info({ message, context });
+  log(message: string, context?: string, traceId?: string, spanId?: string) {
+    const prefix = this.formatTracePrefix(traceId, spanId);
+    this.logger.info({ message: `${prefix}${message}`, context });
   }
 
   // Additional debug log method
-  debug(message: string, context?: string) {
-    this.logger.debug({ message, context });
+  debug(message: string, context?: string, traceId?: string, spanId?: string) {
+    const prefix = this.formatTracePrefix(traceId, spanId);
+    this.logger.debug({ message: `${prefix}${message}`, context });
   }
 
   // HTTP request/response logging method
-  http(message: string, context?: string) {
-    this.logger.info({ message, context: context || 'HTTP' });
+  http(message: string, context?: string, traceId?: string, spanId?: string) {
+    const prefix = this.formatTracePrefix(traceId, spanId);
+    this.logger.info({ message: `${prefix}${message}`, context: context || 'HTTP' });
   }
 }

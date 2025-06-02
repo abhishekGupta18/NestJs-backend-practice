@@ -7,8 +7,13 @@ services:
     ports:
       - '${PROMETHEUS_PORT}:9090'
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-      - ./data/prometheus:/etc/prometheus
+      - ./apm/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./apm/rules.yml:/etc/prometheus/rules.yml
+      - ./apm/alerts.yml:/etc/prometheus/alerts.yml
+      - prometheus-data:/etc/prometheus
+    environment:
+      - NESTJS_METRICS_TARGET=${NESTJS_METRICS_TARGET}
+      - NODE_EXPORTER_TARGET=${NODE_EXPORTER_TARGET}
     restart: unless-stopped
     networks:
       - monitoring
@@ -19,7 +24,7 @@ services:
     ports:
       - '${GRAFANA_PORT}:3000'
     volumes:
-      - ./data/grafana:/var/lib/grafana
+      - grafana_data:/var/lib/grafana
     restart: unless-stopped
     environment:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
@@ -30,7 +35,7 @@ services:
     image: prom/node-exporter:latest
     container_name: node-exporter
     ports:
-      - '9100:9100'
+      - '${NODE_EXPORTER_PORT}:9100'
     restart: unless-stopped
     networks:
       - monitoring
@@ -43,7 +48,7 @@ services:
     user: '0:0'
     volumes:
       - ./loki-config.dev.yml:/etc/loki/local-config.yaml
-      - ./data/loki:/loki-data
+      - loki_data:/loki-data
     command: -config.file=/etc/loki/local-config.yaml
     restart: unless-stopped
     networks:
@@ -53,7 +58,7 @@ services:
     image: grafana/promtail:latest
     container_name: promtail
     ports:
-      - '9080:9080'
+      - '${PROMTAIL_PORT}:9080'
     volumes:
       - ./logs:/logs
       - ./promtail-config.yml:/etc/promtail/promtail-config.yml
@@ -62,15 +67,28 @@ services:
     networks:
       - monitoring
 
-  postgres:
+  prometheus-push-gateway:
+    image: prom/pushgateway:latest
+    container_name: prometheus-push-gateway
+    ports:
+      - '${PROMETHEUS_PUSH_GATEWAY_PORT}:9091'
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  postgres-db:
     image: 'postgres:latest'
-    container_name: 'postgres'
+    container_name: 'postgres-db'
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: UTC
     ports:
       - '${POSTGRES_PORT}:5432'
+    restart: unless-stopped
+    volumes:
+      - db_data:/var/lib/postgresql/data
     networks:
       - monitoring
 
@@ -80,7 +98,7 @@ services:
     ports:
       - '${REDIS_PORT}:6379'
     volumes:
-      - ./data/redis:/data
+      - redis_data:/data
     restart: unless-stopped
     environment:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -94,6 +112,29 @@ services:
     user: 'redis'
     networks:
       - monitoring
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "${JAEGER_PORT}:16686"            # UI
+      - "${JAEGER_COLLECTOR_PORT}:14268"  # HTTP collector
+      - "${OTLP_PORT}:4318"               # OTLP HTTP endpoint
+    networks:
+      - monitoring
+    restart: unless-stopped
+
+volumes:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana_data:
+    driver: local
+  loki_data:
+    driver: local
 
 networks:
   monitoring:

@@ -122,12 +122,6 @@ Swagger provides auto-generated REST API documentation at `http://localhost:${PO
 
 ---
 
-## 🚀 **GraphQL Integration**
-
-You can interact with your GraphQL schema using the endpoint `http://localhost:${PORT}/graphql`, which offers a playground interface. The schema is auto-generated using Apollo Server.
-
----
-
 ## 🔑 **Hashing with Bcrypt**
 
 For secure password handling, the boilerplate integrates `bcrypt` for hashing:

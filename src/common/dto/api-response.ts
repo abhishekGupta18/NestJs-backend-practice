@@ -3,6 +3,7 @@ export class ApiResponse<T> {
   status: string;
   message?: string;
   error?: string;
+  traceId?: string;
   data?: T;
   meta?: any;
 }

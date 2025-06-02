@@ -1,10 +1,11 @@
-// response.util.ts
+import { ApiResponse } from '@common/dto/api-response';
+
 export class ResponseUtil {
-  static success(data: any, message: string = 'Success') {
-    return { status: 'Success', data, message };
+  static success<T>(data: T, message: string = 'Success', statusCode: number = 200): ApiResponse<T> {
+    return { status: 'Success', data, message, statusCode };
   }
 
-  static error(message: string = 'Error', statusCode: number = 500) {
-    return { status: 'Failure', message, statusCode };
+  static error<T>(message: string = 'Error', statusCode: number = 500, data: T) {
+    return { status: 'Failure', data, message, statusCode };
   }
 }

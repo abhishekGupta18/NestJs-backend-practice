@@ -3,12 +3,12 @@ export enum RouteNames {
   METRICS = 'metrics',
   HEALTH = 'health',
   AUTH = 'auth',
-  GRAPHQL = 'graphql',
   API_DOCS = 'api',
-
+  
   // Named routes
-  INCREMENT = 'increment',
-  ACTIVE_USERS = 'active-users',
+  DEV_TOOLS = 'dev-tools',
+  QUEUES_UI = 'queues',
+  HEALTH_UI = 'health-ui',
   LOGIN = 'login',
   LOGOUT = 'logout',
   REGISTER = 'register',

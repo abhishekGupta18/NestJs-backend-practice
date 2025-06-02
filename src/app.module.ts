@@ -1,6 +1,5 @@
 import { BackgroundModule } from '@bg/background.module';
-import { QueuePrefix } from '@bg/constants/job.constant';
-import { RouteNames } from '@common/route-names';
+import { DEFAULT_JOB_OPTIONS, QueuePrefix } from '@bg/constants/job.constant';
 import { EnvConfigModule } from '@config/env-config.module';
 import { DBModule } from '@db/db.module';
 import { HealthModule } from '@health/health.module';
@@ -9,38 +8,37 @@ import { TransformInterceptor } from '@interceptors/transform.interceptor';
 import { LoggerModule } from '@logger/logger.module';
 import { MetricsModule } from '@metrics/metrics.module';
 import { MetricsMiddleware } from '@middlewares/metrics.middleware';
-import { ApolloDriver } from '@nestjs/apollo';
 import { BullModule } from '@nestjs/bullmq';
-import { CacheModule, CacheStore } from '@nestjs/cache-manager';
+import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { Logger, MiddlewareConsumer, Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { GraphQLModule } from '@nestjs/graphql';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { RedisModule } from '@redis/redis.module';
 import { REDIS_CLIENT } from '@redis/redis.provider';
-import * as graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js';
 import { Redis } from 'ioredis';
+import { ConfigService } from '@nestjs/config';
+import { EnvConfig } from '@config/env.config';
+import { ErrorHandlerService } from '@common/services/error-handler.service';
+import { DevToolsModule } from './api/dev-tools/dev-tools.module';
+import { OtelModule } from '@otel/otel.module';
+import { DevToolsMiddleware } from '@middlewares/dev-tool.middleware';
+import { RouteNames } from '@common/route-names';
+import { CookieAuthMiddleware } from '@middlewares/cookies.middleware';
+
+const configService = new ConfigService<EnvConfig>();
 
 // Queue module
 const queueModule = BullModule.forRootAsync({
   imports: [RedisModule],
   useFactory: (redisClient: Redis) => {
-    console.log(`Connecting to Redis using predefined client`);
+    Logger.log(`Connecting to Redis using predefined client`);
     return {
-      prefix: QueuePrefix.AUTH,
+      prefix: QueuePrefix.SYSTEM, // For grouping queues
       connection: redisClient.options,
-      defaultJobOptions: {
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 1000,
-        },
-        removeOnComplete: true,
-        removeOnFail: false,
-      },
+      defaultJobOptions: DEFAULT_JOB_OPTIONS,
     };
   },
   inject: [REDIS_CLIENT],
@@ -50,49 +48,38 @@ const queueModule = BullModule.forRootAsync({
 const rateLimit = ThrottlerModule.forRoot([
   {
     name: 'short',
-    ttl: 5 * 60, // Time to live in seconds (5 minutes)
-    limit: 15, // Maximum number of requests within the ttl
+    ttl: 1 * 60, // Time to live in seconds (1 minute)
+    limit: 30, // Maximum number of requests within the ttl
   },
   {
     name: 'medium',
-    ttl: 15 * 60, // 15 minutes
-    limit: 50,
+    ttl: 5 * 60, // 5 minutes
+    limit: 100,
   },
   {
     name: 'long',
+    ttl: 30 * 60, // 30 minutes
+    limit: 500,
+  },
+  {
+    name: 'very-long',
     ttl: 60 * 60, // 1 hour
-    limit: 150,
+    limit: 1000,
   },
 ]);
-
-// GraphQL module
-const graphqlModule = GraphQLModule.forRoot({
-  autoSchemaFile: 'schema.gql',
-  driver: ApolloDriver,
-  installSubscriptionHandlers: true,
-  subscriptions: {
-    'graphql-ws': true,
-    'subscriptions-transport-ws': {
-      path: '/graphql',
-    },
-  },
-  context: ({ req }) => ({
-    req,
-  }),
-});
 
 // Cache Module
 const cacheModule = CacheModule.registerAsync({
   useFactory: async () => {
     const store = await redisStore({
       socket: {
-        host: '127.0.0.1',
-        port: 6379,
+        host: configService.get<string>('REDIS_HOST'),
+        port: configService.get<number>('REDIS_PORT'),
       },
     });
 
     return {
-      store: store as unknown as CacheStore,
+      store: store,
       ttl: 5 * 60000, // Default - 5 minutes (milliseconds)
     };
   },
@@ -105,21 +92,28 @@ const cacheModule = CacheModule.registerAsync({
       http: process.env.NODE_ENV !== 'production',
     }),
     rateLimit,
-    graphqlModule,
     cacheModule,
     EnvConfigModule,
     LoggerModule,
     EventEmitterModule.forRoot(),
-    queueModule,
-    DBModule,
     RedisModule,
+    DBModule,
+
     // Background Workers
+    queueModule,
     BackgroundModule,
+
+    // OpenTelemetry
+    OtelModule,
+
     // APIs
     MetricsModule,
     HealthModule,
+    DevToolsModule,
   ],
   providers: [
+    ErrorHandlerService,
+    DevToolsMiddleware,
     {
       provide: APP_INTERCEPTOR,
       useClass: HttpLoggingInterceptor,
@@ -136,10 +130,16 @@ const cacheModule = CacheModule.registerAsync({
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    // Apply middleware only to '/graphql' routes
-    consumer.apply(graphqlUploadExpress()).forRoutes(RouteNames.GRAPHQL);
-
     // Apply to all routes
     consumer.apply(MetricsMiddleware).forRoutes('*');
+    consumer.apply(CookieAuthMiddleware).forRoutes('*');
+    consumer
+      .apply(DevToolsMiddleware)
+      .forRoutes(
+        `:version/${RouteNames.DEV_TOOLS}`,
+        `:version/${RouteNames.HEALTH}/${RouteNames.HEALTH_UI}`,
+        `${RouteNames.QUEUES_UI}`,
+        `${RouteNames.API_DOCS}`
+      );
   }
 }
