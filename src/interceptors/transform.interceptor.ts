@@ -20,11 +20,11 @@ export class TransformInterceptor<T> implements NestInterceptor<T, ApiResponse<T
         map((data) => {
           const response = context.switchToHttp().getResponse();
           return {
-            statusCode: data.statusCode || response.statusCode,
-            status: data.status || 'Success',
-            message: data.message || 'Request successful',
-            data: data.data || data,
-            error: data.error || null,
+            statusCode: data?.statusCode || response?.statusCode || 200,
+            status: data?.status || 'Success',
+            message: data?.message || 'Request successful',
+            data: data?.data || data,
+            error: data?.error || null,
           };
         })
       );

@@ -7,7 +7,6 @@ import { Queue } from 'bullmq';
 @Injectable()
 export class CronQueue {
   private readonly logger = new Logger(CronQueue.name);
-
   constructor(@InjectQueue(QueueName.CRON) private cronQueue: Queue) {}
 
   async addDailyMailJob(data?: any) {

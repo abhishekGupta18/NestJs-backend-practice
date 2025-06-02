@@ -1,3 +1,5 @@
+// Note: Processor is where actual execution happens
+// While events are for Logging, Monitoring, Auditing, and Debugging purposes
 import { QueueName } from '@bg/constants/job.constant';
 import { OnQueueEvent, QueueEventsHost, QueueEventsListener } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';

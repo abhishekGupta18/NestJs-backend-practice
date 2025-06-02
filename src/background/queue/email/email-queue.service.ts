@@ -1,15 +1,14 @@
 import { IOtpEmailJob } from '@bg/interfaces/job.interface';
+// import { EmailService } from '@email/email.service';
 // import { SendEmailDto } from '@email/dto/send-email.dto';
 // import { TemplateDataDTO } from '@email/dto/template-data.dto';
-// import { EmailService } from '@email/email.service';
 // import { AdminEmailIDs } from '@email/enums/email-template.enum';
 import { Injectable, Logger } from '@nestjs/common';
 
 @Injectable()
 export class EmailQueueService {
   private readonly logger = new Logger(EmailQueueService.name);
-
-  // constructor(private readonly mailService: EmailService) {}
+  // constructor(private readonly emailService: EmailService) {}
 
   async sendOtpEmail(data: IOtpEmailJob): Promise<void> {
     try {

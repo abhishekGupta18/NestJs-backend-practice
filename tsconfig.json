@@ -18,6 +18,7 @@
     "maxNodeModuleJsDepth": 20,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "importsNotUsedAsValues": "remove",
     "baseUrl": "./src",
     "paths": {
       "@common/*": ["common/*"],
@@ -27,10 +28,12 @@
       "@logger/*": ["logger/*"],
       "@db/*": ["db/*"],
       "@redis/*": ["redis/*"],
+      "@otel/*": ["otel/*"],
       "@bg/*": ["background/*"],
       "@cron/*": ["background/cron/*"],
       "@email-queue/*": ["background/queue/email/*"],
-      "@media-upload-queue/*": ["background/queue/media-upload/*"],
+      "@notification-queue/*": ["background/queue/notification/*"],
+      "@dead-letter-queue/*": ["background/queue/dead-letter/*"],
       "@metrics/*": ["api/metrics/*"],
       "@health/*": ["api/health/*"]
     }

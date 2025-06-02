@@ -1,5 +1,5 @@
+import { CustomUnauthorizedException } from '@common/filters/exception/custom-unauthorized-exception';
 import { ApiResponse } from '@common/dto/api-response';
-import { CustomUnauthorizedException } from '@common/exceptions/custom-unauthorized-exception';
 import {
   ArgumentsHost,
   BadRequestException,
@@ -7,56 +7,84 @@ import {
   ExceptionFilter,
   ForbiddenException,
   HttpException,
-  HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { ErrorHandlerService } from '@common/services/error-handler.service';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
-@Catch(HttpException)
+@Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
+  constructor(private readonly errorHandlerService: ErrorHandlerService) {}
+
   catch(exception: HttpException, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const _request = ctx.getRequest<Request>();
+    const request = ctx.getRequest<Request>();
+    const context = `${request.method} ${request.url}`;
+    const errorId = uuidv4(); // Unique trace ID
 
-    // Determine context type
-    let status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = exception instanceof HttpException ? (exception.message as string) : 'Internal Server Error';
-    let error = exception instanceof HttpException ? exception.message : 'Unknown Error';
-    let errorCode: string | undefined;
+    Logger.error(
+      `[ErrorID: ${errorId}] Message: ${exception.message}\nStack Trace: ${exception.stack}`,
+      'ErrorContext',
+    );
 
-    if (exception instanceof CustomUnauthorizedException) {
-      const exceptionResponse = exception.getResponse() as any;
-      status = HttpStatus.UNAUTHORIZED;
-      message = exceptionResponse.message;
-      error = exceptionResponse.error;
-      errorCode = exceptionResponse.errorCode;
-    } else if (exception instanceof ForbiddenException) {
-      status = HttpStatus.FORBIDDEN;
-      message = 'User does not have the appropriate permission or role to access this resource';
-    } else if (exception instanceof BadRequestException) {
-      const exceptionResponse = exception.getResponse();
-      if (typeof exceptionResponse === 'object' && 'message' in exceptionResponse) {
-        if (Array.isArray(exceptionResponse['message'])) {
-          message = exceptionResponse['message'].join('; ');
-        } else {
-          message = exceptionResponse['message'] as string;
-        }
-        error = message;
+    let errorResponse: ApiResponse<null>;
+
+    try {
+      if (exception instanceof CustomUnauthorizedException) {
+        errorResponse = this.errorHandlerService.handleUnauthorized(
+          exception,
+          context,
+        );
+      } else if (exception instanceof ForbiddenException) {
+        errorResponse = this.errorHandlerService.handleForbidden(
+          exception,
+          context,
+        );
+      } else if (exception instanceof BadRequestException) {
+        errorResponse = this.errorHandlerService.handleBadRequest(
+          exception,
+          context,
+        );
+      } else if (exception instanceof PrismaClientKnownRequestError) {
+        errorResponse = this.errorHandlerService.handleError(
+          exception,
+          context,
+        );
+      } else {
+        errorResponse = this.errorHandlerService.handleError(
+          exception,
+          context,
+        );
+      }
+    } catch (parseError) {
+      Logger.error(
+        `[ErrorID: ${errorId}] Failed to construct error response: ${parseError.message}`,
+      );
+      errorResponse = {
+        statusCode: 500,
+        status: 'Failure',
+        message: 'Internal Server Error',
+        error: 'Unexpected error occurred',
+        data: null,
+      };
+    }
+
+    // Attach error ID to response
+    (errorResponse as any).traceId = errorId;
+
+    if (host.getType() === 'http') {
+      if (!response.headersSent) {
+        return response.status(errorResponse.statusCode).json(errorResponse);
+      } else {
+        Logger.warn(
+          `[ErrorID: ${errorId}] Attempted to send response after headers were already sent for ${context}`,
+        );
       }
     }
 
-    const formattedResponse: ApiResponse<null> = {
-      statusCode: status,
-      status: 'Failure',
-      message: typeof message === 'string' ? message : 'Error Occurred',
-      error: error,
-      ...(errorCode && { errorCode }),
-    };
-
-    if (host.getType() === 'http') {
-      return response.status(status).send(formattedResponse);
-    } else {
-      return formattedResponse;
-    }
+    return errorResponse;
   }
 }
