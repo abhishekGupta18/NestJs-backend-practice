@@ -10,6 +10,13 @@ export class OtpDbRepository {
     async saveOtp(email:string,otp:string):Promise<boolean>{
         const EXPIRE_TIME = 5 * 60 * 1000;
         const expireAt = new Date(Date.now() + EXPIRE_TIME)
+
+        const otpCode = await this.db.otp_codes.findUnique({where:{email}})
+         if(otpCode.expires_at < new Date()){
+                await this.db.otp_codes.delete({where:{email}})
+            }
+
+
         try{
             await this.db.otp_codes.create({data:{email,otp_code:otp,expires_at:expireAt}})
         }catch(e){

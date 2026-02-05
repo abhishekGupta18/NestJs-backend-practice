@@ -21,6 +21,7 @@ export class AuthService {
         return {
             status: "success",
             message: "Otp sent successfully",
+            otp:otp,
         };
     }
 

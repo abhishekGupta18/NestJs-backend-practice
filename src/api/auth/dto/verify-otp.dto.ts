@@ -24,8 +24,10 @@ export class OtpSentResponseDto{
 
     @ApiProperty({example: "success"})
     status?:string;
-}
 
+    @ApiProperty({example: "123456", description: "6-digit OTP code"})
+    otp?:string; /// returning otp for testing purpose only 
+}
 export class ResendOtpResponseDto  {
      @ApiProperty({example: "Otp sent successfully"})
     message?: string;
