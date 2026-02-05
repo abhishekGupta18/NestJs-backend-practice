@@ -43,3 +43,88 @@ model db_audit_logs {
   new_value       Json?
   triggered_by    String?   @default(dbgenerated("CURRENT_USER"))
 }
+
+
+// 1. User Model
+model users {
+  id             String   @id @default(uuid()) // Changed to UUID
+  first_name     String
+  last_name      String
+  email          String   @unique
+  password_hash  String
+  role           Role     @default(CUSTOMER)
+  profile_url    String?
+  contact_number String?
+  orders         orders[]  
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+}
+// 2. Category Model
+model categories {
+  id            String    @id @default(uuid())
+  category_name String    @unique // Added unique constraint
+  products_list      products[] 
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+}
+
+// 3. Product Model
+model products {
+  id            String      @id @default(uuid())
+  product_name  String
+  product_image String
+  stock         Int
+  rating        Float?
+  price_cent    Int
+  categories_list    categories[]  
+  order_items   OrderItem[] 
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+}
+
+// 4. Order Model
+model orders {
+  id               String      @id @default(uuid())
+  user             users       @relation(fields: [user_id], references: [id])
+  user_id          String      // Must match User.id type
+  order_items      OrderItem[]
+  order_status     OrderStatus @default(PENDING)
+  total_price_cent Int
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+}
+
+// 5. OrderItem (The Bridge Table)
+model OrderItem {
+  id                String  @id @default(uuid())
+  orders             orders   @relation(fields: [order_id], references: [id])
+  order_id          String  // Must match Order.id type
+  products           products @relation(fields: [product_id], references: [id])
+  product_id        String  // Must match Product.id type
+  quantity          Int     
+  price_at_purchase Int     
+}
+
+// 6. OTP Model
+model OtpCode {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  otp_code   String
+  expires_at DateTime
+  is_used    Boolean  @default(false)
+  created_at DateTime @default(now())
+
+  @@index([email]) 
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  CANCELLED
+}

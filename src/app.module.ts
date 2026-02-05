@@ -88,9 +88,11 @@ const cacheModule = CacheModule.registerAsync({
 
 @Module({
   imports: [
-    DevtoolsModule.register({
-      http: process.env.NODE_ENV !== 'production',
-    }),
+DevtoolsModule.register({
+  http: process.env.NODE_ENV !== 'production',
+  port: 8001,
+}),
+
     rateLimit,
     cacheModule,
     EnvConfigModule,
