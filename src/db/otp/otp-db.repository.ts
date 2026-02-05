@@ -1,8 +1,8 @@
 import { DBService } from "@db/db.service";
-import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { error } from "console";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 
 
+@Injectable()
 export class OtpDbRepository {
     
     constructor (private readonly db:DBService){}
@@ -11,7 +11,7 @@ export class OtpDbRepository {
         const EXPIRE_TIME = 5 * 60 * 1000;
         const expireAt = new Date(Date.now() + EXPIRE_TIME)
         try{
-            await this.db.otpCode.create({data:{email,otp_code:otp,expires_at:expireAt}})
+            await this.db.otp_codes.create({data:{email,otp_code:otp,expires_at:expireAt}})
         }catch(e){
             throw new Error("Failed to save otp: " + e)
         }   
@@ -21,19 +21,19 @@ export class OtpDbRepository {
 
     async verifyOtp(email:string,otp:string):Promise<boolean>{
         try{
-            const otpCode = await this.db.otpCode.findUnique({where:{email}})
+            const otpCode = await this.db.otp_codes.findUnique({where:{email}})
             if(!otpCode){
                 throw new NotFoundException("Otp not found")
             }
             if(otpCode.expires_at < new Date()){
-                await this.db.otpCode.delete({where:{email}})
+                await this.db.otp_codes.delete({where:{email}})
                 throw new BadRequestException("Otp expired")
             }
             if(otpCode.otp_code !== otp){
                 throw new UnauthorizedException("Invalid otp")
             }
             if(otpCode.otp_code == otp){
-                await this.db.otpCode.delete({where:{email}})
+                await this.db.otp_codes.delete({where:{email}})
             }
             return true
         }catch(e){
@@ -43,12 +43,12 @@ export class OtpDbRepository {
 
     async resendOtp(email:string):Promise<string>{
         try{
-            const otpCode = await this.db.otpCode.findUnique({where:{email}})
+            const otpCode = await this.db.otp_codes.findUnique({where:{email}})
             if(!otpCode){
                 throw new NotFoundException("Otp not found")
             }
             if(otpCode.expires_at < new Date()){
-                await this.db.otpCode.delete({where:{email}})
+                await this.db.otp_codes.delete({where:{email}})
                 throw new BadRequestException("Otp expired")
             }
             return otpCode.otp_code

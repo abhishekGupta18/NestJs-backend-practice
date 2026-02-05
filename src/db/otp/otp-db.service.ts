@@ -1,5 +1,7 @@
+import { Injectable } from "@nestjs/common";
 import { OtpDbRepository } from "./otp-db.repository";
 
+@Injectable()
 export class OtpDbService{
     constructor(private readonly otpDbRepository:OtpDbRepository){}
 

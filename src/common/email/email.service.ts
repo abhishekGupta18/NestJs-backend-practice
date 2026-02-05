@@ -28,18 +28,17 @@ export class EmailService {
       dynamicTemplateData: data.context,
     };
 
-    try {
-      await sgMail.send(msg);
-      return true;
-    } catch (error) {
-      this.logger.error(`Failed to send email to ${data.to}`, error.stack);
-      
-      // If SendGrid provides a specific error body, log it
-      if (error.response) {
-        this.logger.error(error.response.body);
-      }
-      
-      throw new InternalServerErrorException('Email delivery failed');
-    }
+    // common/email/email.service.ts
+try {
+  await sgMail.send(msg);
+  return true;
+} catch (error) {
+  // Add this to see the EXACT reason from SendGrid (e.g., "Sender not verified")
+  if (error.response) {
+    console.error('SendGrid Error Body:', JSON.stringify(error.response.body, null, 2));
+  }
+  this.logger.error(`Failed to send email to ${data.to}`, error.stack);
+  throw new InternalServerErrorException('Email delivery failed');
+}
   }
 }

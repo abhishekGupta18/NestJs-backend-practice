@@ -27,6 +27,8 @@ import { OtelModule } from '@otel/otel.module';
 import { DevToolsMiddleware } from '@middlewares/dev-tool.middleware';
 import { RouteNames } from '@common/route-names';
 import { CookieAuthMiddleware } from '@middlewares/cookies.middleware';
+import { AuthModule } from './api/auth/auth.module';
+import { OtpModule } from './api/otp/otp.module';
 
 const configService = new ConfigService<EnvConfig>();
 
@@ -112,6 +114,8 @@ DevtoolsModule.register({
     MetricsModule,
     HealthModule,
     DevToolsModule,
+    AuthModule,
+    OtpModule,
   ],
   providers: [
     ErrorHandlerService,

@@ -51,7 +51,6 @@ model users {
   first_name     String
   last_name      String
   email          String   @unique
-  password_hash  String
   role           Role     @default(CUSTOMER)
   profile_url    String?
   contact_number String?
@@ -77,7 +76,7 @@ model products {
   rating        Float?
   price_cent    Int
   categories_list    categories[]  
-  order_items   OrderItem[] 
+  order_items   order_items[] 
   created_at    DateTime    @default(now())
   updated_at    DateTime    @updatedAt
 }
@@ -87,7 +86,7 @@ model orders {
   id               String      @id @default(uuid())
   user             users       @relation(fields: [user_id], references: [id])
   user_id          String      // Must match User.id type
-  order_items      OrderItem[]
+  order_items      order_items[]
   order_status     OrderStatus @default(PENDING)
   total_price_cent Int
   created_at       DateTime    @default(now())
@@ -95,7 +94,7 @@ model orders {
 }
 
 // 5. OrderItem (The Bridge Table)
-model OrderItem {
+model order_items {
   id                String  @id @default(uuid())
   orders             orders   @relation(fields: [order_id], references: [id])
   order_id          String  // Must match Order.id type
@@ -106,7 +105,7 @@ model OrderItem {
 }
 
 // 6. OTP Model
-model OtpCode {
+model otp_codes {
   id         String   @id @default(uuid())
   email      String   @unique
   otp_code   String
