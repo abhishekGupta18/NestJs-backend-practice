@@ -3,10 +3,12 @@ import { ConflictException, Injectable } from "@nestjs/common";
 import { UserSignUpDto, UserSignUpResponseDto } from "./dto/auth.dto";
 import { OtpService } from "api/otp/otp.service";
 import { VerifyOtpDto, ResendOtpDto, OtpSentResponseDto, ResendOtpResponseDto } from "./dto/verify-otp.dto";
+import { generateTokens } from "./utils/generate-tokens";
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export class AuthService {
-    constructor(private readonly authDbService:AuthDbService, private otpService:OtpService) {}
+    constructor(private readonly authDbService:AuthDbService, private otpService:OtpService, private jwtService: JwtService) {}
 
     async signUpUser(signUpDto:UserSignUpDto):Promise<OtpSentResponseDto>{
         const {email} = signUpDto;
@@ -35,6 +37,8 @@ export class AuthService {
 
         // OTP is valid, register the user
         const newUser = await this.authDbService.createUser(verifyOtpDto);
+
+        const tokens = await generateTokens(this.jwtService, newUser);
         
         return {
             id: newUser.id,
@@ -42,8 +46,8 @@ export class AuthService {
            last_name: newUser.last_name,
            email: newUser.email,
            role: newUser.role,
-           
-           
+           accessToken: tokens.accessToken,
+           refreshToken: tokens.refreshToken,
         };
     }
 

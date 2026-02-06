@@ -1,5 +1,4 @@
 import { QueueName } from '@bg/constants/job.constant';
-// import { EmailModule } from '@email/email.module';
 import { EmailQueueEvents } from '@email-queue/email-queue.events';
 import { EmailQueueService } from '@email-queue/email-queue.service';
 import { EmailProcessor } from '@email-queue/email.processor';
@@ -9,6 +8,7 @@ import { Injectable, Module } from '@nestjs/common';
 import { BullBoardModule } from '@bull-board/nestjs';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
 import { DeadLetterQueueModule } from '@dead-letter-queue/dead-letter-queue.module';
+import { EmailModule } from '@common/email/email.module';
 
 @Injectable()
 export class EmailQueueConfig {
@@ -46,7 +46,7 @@ export class EmailQueueConfig {
   imports: [
     EmailQueueConfig.getQueueConfig(),
     EmailQueueConfig.getQueueUIConfig(),
-    // EmailModule,
+     EmailModule,
     DeadLetterQueueModule,
   ],
   providers: [EmailQueueService, EmailProcessor, EmailQueueEvents, EmailQueue],

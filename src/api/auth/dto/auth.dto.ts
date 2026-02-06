@@ -22,7 +22,7 @@ export class UserSignUpDto {
 
 }
 
-export class UserSignUpResponseDto {
+export class UserDto {
 
     @ApiProperty({example:"12344jddb2"})
     @IsString()
@@ -45,6 +45,18 @@ export class UserSignUpResponseDto {
     @ApiProperty({example:"user"})
     @IsString()
     role:string
+
+}
+
+export class UserSignUpResponseDto extends UserDto {
+
+    @ApiProperty({example:"ey..."})
+    @IsString()
+    accessToken:string
+
+    @ApiProperty({example:"ey..."})
+    @IsString()
+    refreshToken:string
 
 }
 

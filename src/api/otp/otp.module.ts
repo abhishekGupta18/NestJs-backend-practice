@@ -1,11 +1,11 @@
 import { OtpService } from "./otp.service";
 import { Module } from "@nestjs/common";
 import { Global } from "@nestjs/common";
-import { EmailModule } from "../../common/email/email.module";
+import { EmailQueueModule } from "@bg/queue/email/email-queue.module";
 
 @Global()
 @Module({
-    imports: [EmailModule],
+    imports: [EmailQueueModule],
     providers: [OtpService],
     exports: [OtpService]
 })
