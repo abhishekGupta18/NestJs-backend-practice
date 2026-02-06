@@ -1,12 +1,12 @@
 import { OtpDbService } from "@db/otp/otp-db.service";
-import { EmailService } from "../../common/email/email.service";
+import { EmailQueue } from "@bg/queue/email/email.queue";
 import { Injectable, InternalServerErrorException } from "@nestjs/common";
 
 @Injectable()
 export class OtpService{
     constructor(
         private readonly otpDbService:OtpDbService,
-        private readonly emailService: EmailService
+        private readonly emailQueue: EmailQueue
     ){}
 
     async sendOtp(email:string):Promise<string>{
@@ -15,17 +15,15 @@ export class OtpService{
         }
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         
-        // Send email
+        // Add job to email queue
         try {
-            await this.emailService.send({
-                to: email,
-                subject: 'Your OTP Code',
-                text: `Your OTP is ${otp}`,
-                html: `<p>Your OTP code is: <strong>${otp}</strong></p>`
+            await this.emailQueue.addOTPEmailJob({
+                email: email,
+                otp: parseInt(otp)
             });
         } catch (error) {
-            console.error("Failed to send OTP email", error);
-            throw new InternalServerErrorException("Failed to send OTP email");
+            console.error("Failed to queue OTP email", error);
+            throw new InternalServerErrorException("Failed to queue OTP email");
         }
 
         const saveOtp = await this.otpDbService.saveOtp(email,otp);

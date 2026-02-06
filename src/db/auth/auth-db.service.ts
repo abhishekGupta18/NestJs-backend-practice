@@ -1,4 +1,4 @@
-import { UserSignUpDto, UserSignUpResponseDto } from "api/auth/dto/auth.dto";
+import { UserSignUpDto, UserDto } from "api/auth/dto/auth.dto";
 import { AuthDbRepository } from "./auth-db.repository";
 
 import { Injectable } from "@nestjs/common";
@@ -7,10 +7,10 @@ import { Injectable } from "@nestjs/common";
 export class AuthDbService {
     constructor(private readonly authDbRepository:AuthDbRepository) {}
 
-    async createUser(data:UserSignUpDto):Promise<UserSignUpResponseDto>{
+    async createUser(data:UserSignUpDto):Promise<UserDto>{
         return this.authDbRepository.createUser(data)
     }
-    async findUserByEmail(email:string):Promise<UserSignUpResponseDto | null>{
+    async findUserByEmail(email:string):Promise<UserDto | null>{
         return this.authDbRepository.findUserByEmail(email)
     }
     

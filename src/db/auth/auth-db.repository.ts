@@ -1,5 +1,5 @@
 import { DBService } from "@db/db.service";
-import { UserSignUpDto, UserSignUpResponseDto } from "api/auth/dto/auth.dto";
+import { UserSignUpDto, UserDto } from "api/auth/dto/auth.dto";
 import { first } from "rxjs";
 
 import { Injectable } from "@nestjs/common";
@@ -8,7 +8,7 @@ import { Injectable } from "@nestjs/common";
 export class AuthDbRepository {
     constructor(private readonly db: DBService) {}
 
-     async createUser(data:UserSignUpDto):Promise<UserSignUpResponseDto>{
+     async createUser(data:UserSignUpDto):Promise<UserDto>{
         const user = await this.db.users.create({
             data:{
                 first_name:data.first_name,
@@ -25,13 +25,20 @@ export class AuthDbRepository {
         }
      }
 
-     async findUserByEmail(email:string):Promise<UserSignUpResponseDto | null>{
+     async findUserByEmail(email:string):Promise<UserDto | null>{
         const user = await this.db.users.findUnique({
             where:{
                 email:email
             }
         })
-        return user;
+        if (!user) return null;
+        return {
+            id:user.id,
+            first_name:user.first_name,
+            last_name:user.last_name,
+            email:user.email,
+            role:user.role
+        };
      }
     
 }    
