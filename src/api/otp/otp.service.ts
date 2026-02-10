@@ -10,10 +10,17 @@ export class OtpService{
     ){}
 
     async sendOtp(email:string):Promise<string>{
+
+
         if(!email){
             throw new Error("Email is required");
         }
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        const saveOtp = await this.otpDbService.saveOtp(email,otp);
+        if(!saveOtp){
+            throw new Error("Failed to save otp");
+        }  
         
         // Add job to email queue
         try {
@@ -26,10 +33,7 @@ export class OtpService{
             throw new InternalServerErrorException("Failed to queue OTP email");
         }
 
-        const saveOtp = await this.otpDbService.saveOtp(email,otp);
-        if(!saveOtp){
-            throw new Error("Failed to save otp");
-        }   
+         
         return otp;
     }
 

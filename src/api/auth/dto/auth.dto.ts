@@ -61,6 +61,38 @@ export class UserSignUpResponseDto extends UserDto {
 }
 
 
+export class UserLoginDto {
+
+    @ApiProperty({example:"jhon.doe@gmail.com"})
+    @IsEmail()
+    @IsString()
+    @IsNotEmpty()
+    email:string
+
+}
+
+export class UserLoginResponseDto extends UserDto {
+
+    @ApiProperty({example:"ey..."})
+    @IsString()
+    accessToken:string
+
+    @ApiProperty({example:"ey..."})
+    @IsString()
+    refreshToken:string
+
+}
+
+export class UserLoginApiResponseDto extends ApiResponse<UserLoginResponseDto> {
+
+    @ApiProperty({type: () => UserLoginResponseDto})
+    declare data?:UserLoginResponseDto
+}
+
+export class UserLogoutApiResponseDto  extends ApiResponse<null>{
+    declare data?:null
+}
+
 export class UserSignUpApiResponseDto extends ApiResponse<UserSignUpResponseDto> {
 
     @ApiProperty({type: () => UserSignUpResponseDto})

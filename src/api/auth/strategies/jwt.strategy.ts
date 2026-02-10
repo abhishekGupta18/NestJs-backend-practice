@@ -2,6 +2,7 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { getEnv } from '@common/getEnv';
 
 // Define the shape of the data expected in the JWT payload
 // This is the data you included when generating the Access Token
@@ -29,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
             ]),
 
             // 2. Secret key used to sign the token (must match the one used during login)
-            secretOrKey: process.env.JWT_ACCESS_SECRET,
+            secretOrKey: getEnv('JWT_ACCESS_SECRET'),
 
             // 3. This option tells passport to handle token expiration validation for us
             ignoreExpiration: false,

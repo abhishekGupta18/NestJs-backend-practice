@@ -8,6 +8,7 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as bodyParser from 'body-parser';
 import helmet from 'helmet';
+import * as cookieParser from 'cookie-parser';
 import { Response } from 'express';
 import * as path from 'path';
 import { AppModule } from './app.module';
@@ -32,6 +33,7 @@ async function bootstrap() {
 
   // Apply Helmet Middleware for setting security-related HTTP headers
   app.use(helmet());
+  app.use(cookieParser());
 
   const configService = app.get(ConfigService<EnvConfig>);
   const corsOrigins =
