@@ -80,7 +80,7 @@ model user_permissions {
 model categories {
   id            String    @id @default(uuid())
   category_name String    @unique
-  products_list products[] 
+  product_categories product_categories[]
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 }
@@ -96,8 +96,17 @@ model products {
   created_at    DateTime    @default(now())
   updated_at    DateTime    @updatedAt
   
-  categories_list categories[]  
+ product_categories product_categories[]
   order_items     order_items[] 
+}
+
+model product_categories {
+  product_id  String
+  category_id String
+  product     products   @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  category    categories @relation(fields: [category_id], references: [id], onDelete: Cascade)
+
+  @@id([product_id, category_id])
 }
 
 model orders {
