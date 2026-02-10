@@ -16,6 +16,7 @@ model users {
   email            String             @unique
   profile_url      String?
   contact_number   String?
+  deleted_at       DateTime?
   created_at       DateTime           @default(now())
   updated_at       DateTime           @updatedAt
   
@@ -91,6 +92,7 @@ model products {
   stock         Int
   rating        Float?
   price_cent    Int
+  deleted_at    DateTime?
   created_at    DateTime    @default(now())
   updated_at    DateTime    @updatedAt
   
