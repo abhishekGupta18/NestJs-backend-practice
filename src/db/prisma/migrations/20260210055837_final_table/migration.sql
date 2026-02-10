@@ -2,43 +2,6 @@
 CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'PAID', 'SHIPPED', 'CANCELLED');
 
 -- CreateTable
-CREATE TABLE "audit_logs" (
-    "id" SERIAL NOT NULL,
-    "event_timestamp" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
-    "requested_api" VARCHAR(255),
-    "app_version" VARCHAR(50),
-    "system_name" VARCHAR(100),
-    "system_version" VARCHAR(50),
-    "user_agent" TEXT,
-    "ip_address" VARCHAR(45),
-    "country" VARCHAR(100),
-    "host_name" VARCHAR(255),
-    "table_name" VARCHAR(100),
-    "operation_type" VARCHAR(50),
-    "severity" VARCHAR(20),
-    "description" TEXT,
-    "details" JSONB,
-    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "db_audit_logs" (
-    "id" SERIAL NOT NULL,
-    "event_timestamp" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
-    "table_name" VARCHAR(100) NOT NULL,
-    "operation_type" VARCHAR(10) NOT NULL,
-    "db_user" VARCHAR(100),
-    "db_name" VARCHAR(100),
-    "old_value" JSONB,
-    "new_value" JSONB,
-    "triggered_by" TEXT DEFAULT CURRENT_USER,
-
-    CONSTRAINT "db_audit_logs_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "users" (
     "id" TEXT NOT NULL,
     "first_name" TEXT NOT NULL,
@@ -84,6 +47,14 @@ CREATE TABLE "role_permissions" (
     "permission_id" TEXT NOT NULL,
 
     CONSTRAINT "role_permissions_pkey" PRIMARY KEY ("role_id","permission_id")
+);
+
+-- CreateTable
+CREATE TABLE "user_permissions" (
+    "user_id" TEXT NOT NULL,
+    "permission_id" TEXT NOT NULL,
+
+    CONSTRAINT "user_permissions_pkey" PRIMARY KEY ("user_id","permission_id")
 );
 
 -- CreateTable
@@ -134,6 +105,43 @@ CREATE TABLE "order_items" (
 );
 
 -- CreateTable
+CREATE TABLE "audit_logs" (
+    "id" SERIAL NOT NULL,
+    "event_timestamp" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    "requested_api" VARCHAR(255),
+    "app_version" VARCHAR(50),
+    "system_name" VARCHAR(100),
+    "system_version" VARCHAR(50),
+    "user_agent" TEXT,
+    "ip_address" VARCHAR(45),
+    "country" VARCHAR(100),
+    "host_name" VARCHAR(255),
+    "table_name" VARCHAR(100),
+    "operation_type" VARCHAR(50),
+    "severity" VARCHAR(20),
+    "description" TEXT,
+    "details" JSONB,
+    "created_at" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "audit_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "db_audit_logs" (
+    "id" SERIAL NOT NULL,
+    "event_timestamp" TIMESTAMPTZ(6) DEFAULT CURRENT_TIMESTAMP,
+    "table_name" VARCHAR(100) NOT NULL,
+    "operation_type" VARCHAR(10) NOT NULL,
+    "db_user" VARCHAR(100),
+    "db_name" VARCHAR(100),
+    "old_value" JSONB,
+    "new_value" JSONB,
+    "triggered_by" TEXT DEFAULT CURRENT_USER,
+
+    CONSTRAINT "db_audit_logs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "otp_codes" (
     "id" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -154,6 +162,18 @@ CREATE TABLE "_categoriesToproducts" (
 );
 
 -- CreateIndex
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "roles_role_name_key" ON "roles"("role_name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "permissions_permission_name_key" ON "permissions"("permission_name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "categories_category_name_key" ON "categories"("category_name");
+
+-- CreateIndex
 CREATE INDEX "idx_audit_logs_country" ON "audit_logs"("country");
 
 -- CreateIndex
@@ -169,18 +189,6 @@ CREATE INDEX "idx_audit_logs_severity" ON "audit_logs"("severity");
 CREATE INDEX "idx_audit_logs_table_operation" ON "audit_logs"("table_name", "operation_type");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
-CREATE UNIQUE INDEX "roles_role_name_key" ON "roles"("role_name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "permissions_permission_name_key" ON "permissions"("permission_name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "categories_category_name_key" ON "categories"("category_name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "otp_codes_email_key" ON "otp_codes"("email");
 
 -- CreateIndex
@@ -190,25 +198,31 @@ CREATE INDEX "otp_codes_email_idx" ON "otp_codes"("email");
 CREATE INDEX "_categoriesToproducts_B_index" ON "_categoriesToproducts"("B");
 
 -- AddForeignKey
-ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_role_id_fkey" FOREIGN KEY ("role_id") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "orders" ADD CONSTRAINT "orders_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "user_permissions" ADD CONSTRAINT "user_permissions_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "order_items" ADD CONSTRAINT "order_items_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "user_permissions" ADD CONSTRAINT "user_permissions_permission_id_fkey" FOREIGN KEY ("permission_id") REFERENCES "permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "order_items" ADD CONSTRAINT "order_items_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "orders" ADD CONSTRAINT "orders_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "order_items" ADD CONSTRAINT "order_items_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "order_items" ADD CONSTRAINT "order_items_product_id_fkey" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "_categoriesToproducts" ADD CONSTRAINT "_categoriesToproducts_A_fkey" FOREIGN KEY ("A") REFERENCES "categories"("id") ON DELETE CASCADE ON UPDATE CASCADE;

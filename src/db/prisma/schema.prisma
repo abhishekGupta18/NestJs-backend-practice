@@ -7,6 +7,122 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- RBAC CORE TABLES ---
+
+model users {
+  id               String             @id @default(uuid())
+  first_name       String
+  last_name        String
+  email            String             @unique
+  profile_url      String?
+  contact_number   String?
+  created_at       DateTime           @default(now())
+  updated_at       DateTime           @updatedAt
+  
+  // Relations
+  orders           orders[]
+  user_roles       user_roles[] 
+  user_permissions user_permissions[]
+}
+
+model roles {
+  id               String             @id @default(uuid())
+  role_name        String             @unique
+  created_at       DateTime           @default(now())
+  
+  // Relations
+  user_roles       user_roles[]
+  role_permissions role_permissions[]
+}
+
+model permissions {
+  id               String             @id @default(uuid())
+  permission_name  String             @unique
+  created_at       DateTime           @default(now())
+  
+  // Relations
+  role_permissions role_permissions[]
+  user_permissions user_permissions[]
+}
+
+// --- RBAC JOIN TABLES (The Bridges with Cascade) ---
+
+model user_roles {
+  user_id  String
+  role_id  String
+  user     users  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  role     roles  @relation(fields: [role_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, role_id])
+}
+
+model role_permissions {
+  role_id       String
+  permission_id String
+  role          roles       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  permission    permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@id([role_id, permission_id])
+}
+
+model user_permissions {
+  user_id       String
+  permission_id String
+  user          users       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  permission    permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, permission_id])
+}
+
+// --- INVENTORY & ORDERS ---
+
+model categories {
+  id            String    @id @default(uuid())
+  category_name String    @unique
+  products_list products[] 
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+}
+
+model products {
+  id            String      @id @default(uuid())
+  product_name  String
+  product_image String
+  stock         Int
+  rating        Float?
+  price_cent    Int
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  
+  categories_list categories[]  
+  order_items     order_items[] 
+}
+
+model orders {
+  id               String      @id @default(uuid())
+  user_id          String
+  order_status     OrderStatus @default(PENDING)
+  total_price_cent Int
+  created_at       DateTime    @default(now())
+  updated_at       DateTime    @updatedAt
+
+  user             users       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  order_items      order_items[]
+}
+
+model order_items {
+  id                String  @id @default(uuid())
+  order_id          String
+  product_id        String
+  quantity          Int     
+  price_at_purchase Int     
+
+  orders            orders   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  products          products @relation(fields: [product_id], references: [id], onDelete: Cascade)
+}
+
+// --- AUDIT & UTILITY ---
+
 model audit_logs {
   id              Int       @id @default(autoincrement())
   event_timestamp DateTime? @default(now()) @db.Timestamptz(6)
@@ -44,123 +160,6 @@ model db_audit_logs {
   triggered_by    String?   @default(dbgenerated("CURRENT_USER"))
 }
 
-
-// 1. User Model
-model users {
-  id             String      @id @default(uuid())
-  first_name     String
-  last_name      String
-  email          String      @unique
-  profile_url    String?
-  contact_number String?
-  created_at     DateTime    @default(now())
-  updated_at     DateTime    @updatedAt
-  
-  // Relations
-  orders         orders[]
-  user_roles     user_roles[] 
-  user_permissions user_permissions[]
-}
-
-model roles {
-  id               String             @id @default(uuid())
-  role_name        String             @unique
-  created_at       DateTime           @default(now())
-  
-  // Relations
-  user_roles       user_roles[]
-  role_permissions role_permissions[]
-}
-
-// 3. Permissions Table (e.g., create_product, delete_order)
-model permissions {
-  id               String             @id @default(uuid())
-  permission_name  String             @unique
-  created_at       DateTime           @default(now())
-  
-  // Relations
-  role_permissions role_permissions[]
-  user_permissions user_permissions[]
-}
-// --- JOIN TABLES (The Bridges) ---
-
-// 4. Bridge: Users <-> Roles
-model user_roles {
-  user_id  String
-  role_id  String
-  user     users  @relation(fields: [user_id], references: [id])
-  role     roles  @relation(fields: [role_id], references: [id])
-
-  @@id([user_id, role_id])
-}
-
-// 5. Bridge: Roles <-> Permissions
-model role_permissions {
-  role_id       String
-  permission_id String
-  role          roles       @relation(fields: [role_id], references: [id])
-  permission    permissions @relation(fields: [permission_id], references: [id])
-
-  @@id([role_id, permission_id])
-}
-
-// Bridge: Users <-> Permissions (Direct Overrides)
-model user_permissions {
-  user_id       String
-  permission_id String
-  user          users       @relation(fields: [user_id], references: [id])
-  permission    permissions @relation(fields: [permission_id], references: [id])
-
-  @@id([user_id, permission_id]) // Prevent duplicate direct assignments
-}
-
-model categories {
-  id            String    @id @default(uuid())
-  category_name String    @unique // Added unique constraint
-  products_list      products[] 
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
-}
-
-
-// 3. Product Model
-model products {
-  id            String      @id @default(uuid())
-  product_name  String
-  product_image String
-  stock         Int
-  rating        Float?
-  price_cent    Int
-  categories_list    categories[]  
-  order_items   order_items[] 
-  created_at    DateTime    @default(now())
-  updated_at    DateTime    @updatedAt
-}
-
-// 4. Order Model
-model orders {
-  id               String      @id @default(uuid())
-  user             users       @relation(fields: [user_id], references: [id])
-  user_id          String      // Must match User.id type
-  order_items      order_items[]
-  order_status     OrderStatus @default(PENDING)
-  total_price_cent Int
-  created_at       DateTime    @default(now())
-  updated_at       DateTime    @updatedAt
-}
-
-// 5. OrderItem (The Bridge Table)
-model order_items {
-  id                String  @id @default(uuid())
-  orders             orders   @relation(fields: [order_id], references: [id])
-  order_id          String  // Must match Order.id type
-  products           products @relation(fields: [product_id], references: [id])
-  product_id        String  // Must match Product.id type
-  quantity          Int     
-  price_at_purchase Int     
-}
-
-// 6. OTP Model
 model otp_codes {
   id         String   @id @default(uuid())
   email      String   @unique
