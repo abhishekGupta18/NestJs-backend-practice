@@ -71,40 +71,58 @@ export class AuthDbRepository {
         };
      }
 
-     async checkUserPermission(userId: string, permissionName: string): Promise<boolean> {
-        const hasAccess = await this.db.users.findFirst({
-            where: {
-                id: userId,
-                OR: [
-                    {
-                        user_roles: {
-                            some: {
-                                role: {
-                                    role_permissions: {
-                                        some: {
-                                            permission: {
-                                                permission_name: permissionName
+
+
+     async getUserPermissions(userId: string): Promise<Set<string>> {
+        const user = await this.db.users.findUnique({
+            where: { id: userId },
+            select: {
+                user_roles: {
+                    select: {
+                        role: {
+                            select: {
+                                role_permissions: {
+                                    select: {
+                                        permission: {
+                                            select: {
+                                                permission_name: true
                                             }
                                         }
                                     }
                                 }
                             }
                         }
-                    },
-                    {
-                        user_permissions: {
-                            some: {
-                                permission: {
-                                    permission_name: permissionName
-                                }
+                    }
+                },
+                user_permissions: {
+                    select: {
+                        permission: {
+                            select: {
+                                permission_name: true
                             }
                         }
                     }
-                ]
-            },
-            select: { id: true }
+                }
+            }
         });
-        return !!hasAccess;
+
+        if (!user) return new Set();
+
+        const permissions = new Set<string>();
+
+        // Add role-based permissions
+        user.user_roles.forEach(ur => {
+            ur.role.role_permissions.forEach(rp => {
+                permissions.add(rp.permission.permission_name);
+            });
+        });
+
+        // Add direct permissions
+        user.user_permissions.forEach(up => {
+            permissions.add(up.permission.permission_name);
+        });
+
+        return permissions;
      }
     
 }    

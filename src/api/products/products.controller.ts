@@ -10,9 +10,9 @@ import { ResponseUtil } from "@common/helpers/response.utils";
 export class ProductsController {
     constructor(private readonly productsService: ProductsService) {}
 
-    @Post("/create")        
+    @Post()        
     @UseGuards(JwtAuthGuard, PermissionsGuard)
-    @RequirePermission("view_products")
+    @RequirePermission("add_products")
     async createProduct(@Body() createProductDto: CreateProductDto): Promise<CreateProductApiResponseDto> {
         const product = await  this.productsService.createProduct(createProductDto);
         return ResponseUtil.success(product, 'Product created successfully', HttpStatus.OK);

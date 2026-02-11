@@ -14,8 +14,10 @@ export class AuthDbService {
         return this.authDbRepository.findUserByEmail(email)
     }
 
-    async checkPermission(userId: string, permissionName: string): Promise<boolean> {
-        return this.authDbRepository.checkUserPermission(userId, permissionName);
+    async checkPermissions(userId: string, requiredPermissions: string[]): Promise<boolean> {
+        if (!requiredPermissions.length) return true;
+        const userPermissions = await this.authDbRepository.getUserPermissions(userId);
+        return requiredPermissions.every(permission => userPermissions.has(permission));
     }
     
 }

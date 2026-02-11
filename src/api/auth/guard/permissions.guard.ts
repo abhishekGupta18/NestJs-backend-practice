@@ -8,8 +8,8 @@ export class PermissionsGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // 1. What permission does this route need?
-    const requiredPermission = this.reflector.get<string>('permission', context.getHandler());
-    if (!requiredPermission) return true;
+    const requiredPermissions = this.reflector.get<string[]>('permissions', context.getHandler());
+    if (!requiredPermissions || requiredPermissions.length === 0) return true;
 
     // 2. Who is the user? (Assumes JwtAuthGuard has already run)
     const request = context.switchToHttp().getRequest();
@@ -18,10 +18,10 @@ export class PermissionsGuard implements CanActivate {
 
     // 3. The "Hybrid" Check
     // We try to find the user ONLY if they have the permission in Path A OR Path B
-    const hasAccess = await this.authDbService.checkPermission(userId, requiredPermission);
+    const hasAccess = await this.authDbService.checkPermissions(userId, requiredPermissions);
 
     if (!hasAccess) {
-      throw new ForbiddenException(`Missing permission: ${requiredPermission}`);
+      throw new ForbiddenException(`Missing permissions: ${requiredPermissions.join(', ')}`);
     }
 
     return true;

@@ -1,4 +1,4 @@
 // src/api/auth/decorator/permissions.decorator.ts
 import { SetMetadata } from '@nestjs/common';
 
-export const RequirePermission = (permission: string) => SetMetadata('permission', permission);
+export const RequirePermission = (...permissions: string[]) => SetMetadata('permissions', permissions);
