@@ -1,6 +1,6 @@
 import { AuthDbService } from "@db/auth/auth-db.service";
 import { ConflictException, Injectable } from "@nestjs/common";
-import { UserSignUpDto, UserSignUpResponseDto } from "./dto/auth.dto";
+import { UserLoginDto, UserLoginResponseDto, UserSignUpDto, UserSignUpResponseDto } from "./dto/auth.dto";
 import { OtpService } from "api/otp/otp.service";
 import { VerifyOtpDto, ResendOtpDto, OtpSentResponseDto, ResendOtpResponseDto } from "./dto/verify-otp.dto";
 import { generateTokens } from "./utils/generate-tokens";
@@ -38,7 +38,7 @@ export class AuthService {
         // OTP is valid, register the user
         const newUser = await this.authDbService.createUser(verifyOtpDto);
 
-        const tokens = await generateTokens(this.jwtService, newUser);
+        const tokens = await generateTokens(newUser);
         
         return {
             id: newUser.id,
@@ -64,6 +64,27 @@ export class AuthService {
         return {
             status: "success",
             message: "Otp resent successfully",
+        };
+    }
+
+    async login(loginDto: UserLoginDto): Promise<UserLoginResponseDto> {
+        const { email } = loginDto;
+        const user = await this.authDbService.findUserByEmail(email);
+        
+        if (!user) {
+            throw new ConflictException("User not found");
+        }
+
+        const tokens = await generateTokens(user);
+        
+        return {
+            id: user.id,
+           first_name: user.first_name,
+           last_name: user.last_name,
+           email: user.email,
+           role: user.role,
+           accessToken: tokens.accessToken,
+           refreshToken: tokens.refreshToken,
         };
     }
 }
