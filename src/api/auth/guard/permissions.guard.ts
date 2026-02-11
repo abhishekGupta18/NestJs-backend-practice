@@ -1,11 +1,10 @@
-// src/api/auth/guard/permissions.guard.ts
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { DBService } from '@db/db.service';
+import { AuthDbService } from '@db/auth/auth-db.service';
 
 @Injectable()
 export class PermissionsGuard implements CanActivate {
-  constructor(private reflector: Reflector, private db: DBService) {}
+  constructor(private reflector: Reflector, private authDbService: AuthDbService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     // 1. What permission does this route need?
@@ -19,34 +18,7 @@ export class PermissionsGuard implements CanActivate {
 
     // 3. The "Hybrid" Check
     // We try to find the user ONLY if they have the permission in Path A OR Path B
-    const hasAccess = await this.db.users.findFirst({
-      where: {
-        id: userId,
-        OR: [
-          {
-            // Path A: Check if any of the user's roles have this permission
-            user_roles: {
-              some: {
-                role: {
-                  role_permissions: {
-                    some: { permission: { permission_name: requiredPermission } }
-                  }
-                }
-              }
-            }
-          },
-          {
-            // Path B: Check if the user has this permission directly (The Override)
-            user_permissions: {
-              some: {
-                permission: { permission_name: requiredPermission }
-              }
-            }
-          }
-        ]
-      },
-      select: { id: true } // We only care if a record is returned
-    });
+    const hasAccess = await this.authDbService.checkPermission(userId, requiredPermission);
 
     if (!hasAccess) {
       throw new ForbiddenException(`Missing permission: ${requiredPermission}`);

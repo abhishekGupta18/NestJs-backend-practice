@@ -13,5 +13,9 @@ export class AuthDbService {
     async findUserByEmail(email:string):Promise<UserDto | null>{
         return this.authDbRepository.findUserByEmail(email)
     }
+
+    async checkPermission(userId: string, permissionName: string): Promise<boolean> {
+        return this.authDbRepository.checkUserPermission(userId, permissionName);
+    }
     
 }

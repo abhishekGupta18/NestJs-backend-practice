@@ -70,5 +70,41 @@ export class AuthDbRepository {
             role:user.user_roles[0].role.role_name
         };
      }
+
+     async checkUserPermission(userId: string, permissionName: string): Promise<boolean> {
+        const hasAccess = await this.db.users.findFirst({
+            where: {
+                id: userId,
+                OR: [
+                    {
+                        user_roles: {
+                            some: {
+                                role: {
+                                    role_permissions: {
+                                        some: {
+                                            permission: {
+                                                permission_name: permissionName
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        user_permissions: {
+                            some: {
+                                permission: {
+                                    permission_name: permissionName
+                                }
+                            }
+                        }
+                    }
+                ]
+            },
+            select: { id: true }
+        });
+        return !!hasAccess;
+     }
     
 }    
