@@ -70,5 +70,59 @@ export class AuthDbRepository {
             role:user.user_roles[0].role.role_name
         };
      }
+
+
+
+     async getUserPermissions(userId: string): Promise<Set<string>> {
+        const user = await this.db.users.findUnique({
+            where: { id: userId },
+            select: {
+                user_roles: {
+                    select: {
+                        role: {
+                            select: {
+                                role_permissions: {
+                                    select: {
+                                        permission: {
+                                            select: {
+                                                permission_name: true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                user_permissions: {
+                    select: {
+                        permission: {
+                            select: {
+                                permission_name: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        if (!user) return new Set();
+
+        const permissions = new Set<string>();
+
+        // Add role-based permissions
+        user.user_roles.forEach(ur => {
+            ur.role.role_permissions.forEach(rp => {
+                permissions.add(rp.permission.permission_name);
+            });
+        });
+
+        // Add direct permissions
+        user.user_permissions.forEach(up => {
+            permissions.add(up.permission.permission_name);
+        });
+
+        return permissions;
+     }
     
 }    

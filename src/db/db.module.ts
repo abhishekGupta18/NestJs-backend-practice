@@ -5,11 +5,13 @@ import { OtpDbService } from './otp/otp-db.service';
 import { OtpDbRepository } from './otp/otp-db.repository';
 import { AuthDbRepository } from './auth/auth-db.repository';
 import { AuthDbService } from './auth/auth-db.service';
+import { ProductsDbRepository } from './products/products-db.repository';
+import { ProductsDbService } from './products/products-db.service';
 
 @Global()
 @Module({
   imports: [ConfigModule],
-  providers: [DBService, OtpDbService,OtpDbRepository,AuthDbRepository,AuthDbService],
-  exports: [DBService, OtpDbService,AuthDbService],
+  providers: [DBService, OtpDbService,OtpDbRepository,AuthDbRepository,AuthDbService, ProductsDbRepository, ProductsDbService],
+  exports: [DBService, OtpDbService,AuthDbService, ProductsDbService],
 })
 export class DBModule {}

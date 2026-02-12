@@ -5,8 +5,7 @@ import { VerifyOtpDto, ResendOtpDto, OtpSentResponseDto, ResendOtpResponseDto } 
 import { ResponseUtil } from "@common/helpers/response.utils";
 import { AuthLogin, AuthLogout, AuthResendOtp, AuthSignup, AuthVerifyOtp } from "./swagger/auth.swagger";
 import { Response } from "express";
-import { JwtAuthGuard } from "./guard/jwt-auth.guard";
-import { User } from "./decorator/userDecorator";
+
 
 @Controller('auth')
 export class AuthController {
@@ -83,11 +82,6 @@ export class AuthController {
         return ResponseUtil.success(null, 'User logged out successfully', HttpStatus.OK);
     }
 
-    @Get('profile')
-    @UseGuards(JwtAuthGuard)
-    async getProfile(@User() user: any) {
-        return ResponseUtil.success(user, 'User profile fetched successfully', HttpStatus.OK);
-    }
-    
+   
 
 }
