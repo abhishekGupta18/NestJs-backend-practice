@@ -13,7 +13,7 @@ import { PermissionsGuard } from './guard/permissions.guard';
 @Module({
   imports: [
     DBModule,
-    PassportModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),
   ],
   controllers: [AuthController],

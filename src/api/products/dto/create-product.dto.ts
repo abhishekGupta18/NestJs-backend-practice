@@ -8,10 +8,6 @@ export class CreateProductDto {
     @IsString()
     product_name: string;
 
-    @ApiProperty({example: "https://example.com/product-image.jpg"})
-    @IsString()
-    product_image?: string;
-
     @ApiProperty({example: "10"})
     @IsNumber()
     stock: number;
@@ -34,10 +30,6 @@ export class CreateProductResponseDto {
     @ApiProperty({example: "macbook pro"})
     @IsString()
     product_name: string;
-
-    @ApiProperty({example: "https://example.com/product-image.jpg"})
-    @IsString()
-    product_image?: string;
 
     @ApiProperty({example: "10"})
     @IsNumber()

@@ -12,7 +12,6 @@ model users {
   first_name       String
   last_name        String
   email            String             @unique
-  profile_url      String?
   contact_number   String?
   created_at       DateTime           @default(now())
   updated_at       DateTime           @updatedAt
@@ -76,7 +75,6 @@ model categories {
 model products {
   id                 String               @id @default(uuid())
   product_name       String
-  product_image      String
   stock              Int
   rating             Float?
   price_cent         Int
@@ -165,9 +163,68 @@ model otp_codes {
   @@index([email])
 }
 
+model media_files{
+  id String @id @default(uuid())
+  entity_type MediaFileEntityType
+  entity_id String @db.VarChar(50)
+  s3_key String @db.VarChar(255)
+  access_level String @db.VarChar(50) @default("PRIVATE")
+  status String @db.VarChar(50) @default("PENDING")
+  deleted_at DateTime?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  image_attribute    image_attributes?    // Optional: Only exists if it's an image
+  document_attribute document_attributes? // Optional: Only exists if it's a doc
+  @@index([entity_id])
+}
+
+model image_attributes{
+  id String @id @default(uuid())
+  media_file_id String @unique
+  image_type MediaFileType 
+  image_name String? @db.VarChar(255)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  media_file media_files @relation(fields: [media_file_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+model document_attributes{
+  id String @id @default(uuid())
+  media_file_id String @unique
+  document_type MediaFileType 
+  document_name String @db.VarChar(255)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  media_file media_files @relation(fields: [media_file_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
+
 enum OrderStatus {
   PENDING
   PAID
   SHIPPED
   CANCELLED
+}
+
+enum MediaFileEntityType {
+  USER
+  PRODUCT
+  ORDER
+}
+
+enum MediaFileType {
+  PROFILE_IMAGE
+  COVER_IMAGE
+  PRODUCT_IMAGE_MAIN
+  PRODUCT_IMAGE_VARIANT
+  INVOICE
+  RECEIPT
+}
+
+enum AccessLevel {
+  PRIVATE
+  PUBLIC
+}
+
+enum ImageType {
+  MAIN
+  VARIANT
 }

@@ -140,4 +140,20 @@ export class EnvConfig {
   @IsNotEmpty()
   @IsString()
   SERVICES_HEALTH_URL: string;
+
+  @IsNotEmpty()
+  @IsString()
+  AWS_ACCESS_KEY_ID: string;
+
+  @IsNotEmpty()
+  @IsString()
+  AWS_SECRET_ACCESS_KEY: string;
+
+  @IsNotEmpty()
+  @IsString()
+  AWS_REGION: string;
+
+  @IsNotEmpty()
+  @IsString()
+  AWS_S3_BUCKET: string;
 }
