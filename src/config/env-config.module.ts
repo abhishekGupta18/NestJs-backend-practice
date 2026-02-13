@@ -45,6 +45,10 @@ const envConfig = registerAs(
       APP_LOGS_URL: process.env.APP_LOGS_URL,
       DEV_DOCS_URL: process.env.DEV_DOCS_URL,
       SERVICES_HEALTH_URL: process.env.SERVICES_HEALTH_URL,
+      AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
+      AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
+      AWS_REGION: process.env.AWS_REGION,
+      AWS_S3_BUCKET: process.env.AWS_S3_BUCKET,
     }) as EnvConfig
 );
 
@@ -99,6 +103,10 @@ const validationSchema = Joi.object({
   APP_LOGS_URL: Joi.string().required(),
   DEV_DOCS_URL: Joi.string().required(),
   SERVICES_HEALTH_URL: Joi.string().required(),
+  AWS_ACCESS_KEY_ID: Joi.string().required(),
+  AWS_SECRET_ACCESS_KEY: Joi.string().required(),
+  AWS_REGION: Joi.string().required(),
+  AWS_S3_BUCKET: Joi.string().required(),
 });
 
 @Module({
