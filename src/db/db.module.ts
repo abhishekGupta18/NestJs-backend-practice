@@ -7,11 +7,13 @@ import { AuthDbRepository } from './auth/auth-db.repository';
 import { AuthDbService } from './auth/auth-db.service';
 import { ProductsDbRepository } from './products/products-db.repository';
 import { ProductsDbService } from './products/products-db.service';
+import { CategoriesDbService } from './categories/categories-db.service';
+import { CategoriesDbRepository } from './categories/categoroies-db.repository';
 
 @Global()
 @Module({
   imports: [ConfigModule],
-  providers: [DBService, OtpDbService,OtpDbRepository,AuthDbRepository,AuthDbService, ProductsDbRepository, ProductsDbService],
-  exports: [DBService, OtpDbService,AuthDbService, ProductsDbService],
+  providers: [DBService, OtpDbService,OtpDbRepository,AuthDbRepository,AuthDbService, ProductsDbRepository, ProductsDbService, CategoriesDbService, CategoriesDbRepository],
+  exports: [DBService, OtpDbService,AuthDbService, ProductsDbService, CategoriesDbService],
 })
 export class DBModule {}
