@@ -30,6 +30,8 @@ import { CookieAuthMiddleware } from '@middlewares/cookies.middleware';
 import { AuthModule } from './api/auth/auth.module';
 import { OtpModule } from './api/otp/otp.module';
 import { MediaModule } from 'api/media/media.module';
+import { ProductsModule } from 'api/products/products.module';
+import { CategoriesModule } from 'api/categories/categories.module';
 
 const configService = new ConfigService<EnvConfig>();
 
@@ -118,6 +120,8 @@ DevtoolsModule.register({
     AuthModule,
     OtpModule,
     MediaModule,
+    ProductsModule,
+    CategoriesModule,
   ],
   providers: [
     ErrorHandlerService,
