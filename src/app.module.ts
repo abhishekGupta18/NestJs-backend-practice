@@ -32,6 +32,7 @@ import { OtpModule } from './api/otp/otp.module';
 import { MediaModule } from 'api/media/media.module';
 import { ProductsModule } from 'api/products/products.module';
 import { CategoriesModule } from 'api/categories/categories.module';
+import { OrdersModule } from 'api/orders/orders.module';
 
 const configService = new ConfigService<EnvConfig>();
 
@@ -122,6 +123,7 @@ DevtoolsModule.register({
     MediaModule,
     ProductsModule,
     CategoriesModule,
+    OrdersModule,
   ],
   providers: [
     ErrorHandlerService,
