@@ -4,14 +4,18 @@ import { CreateOrderDto, CreatedOrderApiResponseDto, GetAllOrdersApiResponseDto,
 import { Request } from "express";
 import { ResponseUtil } from "@common/helpers/response.utils";
 import { JwtAuthGuard } from "api/auth/guard/jwt-auth.guard";
+import { ApiTags } from "@nestjs/swagger";
+import { CreateOrderSwagger, GetAllOrdersSwagger, GetOrderByIdSwagger, UpdateOrderStatusSwagger } from "./swagger/orders.swagger";
 
 
+@ApiTags("orders")
 @Controller("orders")
 @UseGuards(JwtAuthGuard)
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Post()
+  @CreateOrderSwagger()
   async createOrder(
     @Body() data: CreateOrderDto,
     @Req() req: Request,
@@ -26,6 +30,7 @@ export class OrdersController {
   }
 
   @Patch(":id/status")
+  @UpdateOrderStatusSwagger()
   async updateOrderStatus(
     @Param("id") id: string,
     @Body() data: UpdateOrderStatusDto,
@@ -39,6 +44,7 @@ export class OrdersController {
   }
 
 @Get()
+@GetAllOrdersSwagger()
 async getAllOrders(): Promise<GetAllOrdersApiResponseDto> {
   const orders = await this.ordersService.getAllOrders();
   return ResponseUtil.success(
@@ -49,6 +55,7 @@ async getAllOrders(): Promise<GetAllOrdersApiResponseDto> {
 }
 
  @Get(":id")
+ @GetOrderByIdSwagger()
  async getOrderById(
   @Param("id") id: string,
  ): Promise<GetOrdersApiResponseDto> {
