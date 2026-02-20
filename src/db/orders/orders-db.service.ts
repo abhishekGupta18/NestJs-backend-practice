@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { OrdersDBRepository } from "./orders-db.repository";
-import { CreatedOrderResponseDto, CreateOrderDto, GetOrderResponseDto, UpdatedOrderResponseDto, UpdateOrderStatusDto } from "api/orders/dto/orders.dto";
+import { CreatedOrderResponseDto, CreateOrderDto, FilterOrdersListDto, GetOrderResponseDto, UpdatedOrderResponseDto, UpdateOrderStatusDto } from "api/orders/dto/orders.dto";
 
 @Injectable()
 export class OrdersDbService {
@@ -14,8 +14,8 @@ export class OrdersDbService {
         return await this.ordersDBRepository.updateOrderStatus(id, data);
     }
     
-    async getAllOrders(): Promise<GetOrderResponseDto[]> {
-        return await this.ordersDBRepository.getAllOrders();
+    async getAllOrders(filterlist: FilterOrdersListDto): Promise<GetOrderResponseDto[]> {
+        return await this.ordersDBRepository.getAllOrders(filterlist);
     }
 
     async getOrderById(id:string):Promise<GetOrderResponseDto>{

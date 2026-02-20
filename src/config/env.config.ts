@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class EnvConfig {
   @IsNotEmpty()
@@ -156,4 +156,8 @@ export class EnvConfig {
   @IsNotEmpty()
   @IsString()
   AWS_S3_BUCKET: string;
+
+  @IsOptional()
+  @IsBoolean()
+  ENABLE_LOKI_LOGGING?: boolean;
 }

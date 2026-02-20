@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { OrdersDbService } from "db/orders/orders-db.service";
-import { CreatedOrderResponseDto, CreateOrderDto, GetOrderResponseDto, UpdatedOrderResponseDto, UpdateOrderStatusDto } from "./dto/orders.dto";
+import { CreatedOrderResponseDto, CreateOrderDto, FilterOrdersListDto, GetOrderResponseDto, UpdatedOrderResponseDto, UpdateOrderStatusDto } from "./dto/orders.dto";
 
 
 @Injectable()
@@ -21,14 +21,11 @@ export class OrdersService{
         return await this.ordersDBService.updateOrderStatus(id, data);
     }
 
-    async getAllOrders(): Promise<GetOrderResponseDto[]> {
-        return await this.ordersDBService.getAllOrders();
+    async getAllOrders(filterlist:FilterOrdersListDto): Promise<GetOrderResponseDto[]> {
+        return await this.ordersDBService.getAllOrders(filterlist);
     }
 
     async getOrderById(id:string):Promise<GetOrderResponseDto>{
-        if(!id){
-            throw new BadRequestException("Order ID is required");
-        }
         return await this.ordersDBService.getOrderById(id);
     }
 }

@@ -1,7 +1,7 @@
 import { DBService } from "@db/db.service";
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { OrderStatus } from "@prisma/client";
-import { CreatedOrderResponseDto, CreateOrderDto, GetOrderResponseDto, UpdatedOrderResponseDto, UpdateOrderStatusDto } from "api/orders/dto/orders.dto";
+import { CreatedOrderResponseDto, CreateOrderDto, FilterOrdersListDto, GetOrderResponseDto, UpdatedOrderResponseDto, UpdateOrderStatusDto } from "api/orders/dto/orders.dto";
 
 @Injectable()
 export class OrdersDBRepository {
@@ -82,7 +82,7 @@ export class OrdersDBRepository {
     const updateOrderStatus = await this.db.orders.update({
       where: { id: id },
       data: {
-        order_status: data.orderStatus as unknown as OrderStatus,
+        order_status: data.orderStatus,
       },
     });
 
@@ -93,11 +93,28 @@ export class OrdersDBRepository {
     };
   }
 
-  async getAllOrders(): Promise<GetOrderResponseDto[]> {
+  async getAllOrders(filterlist: FilterOrdersListDto = {}): Promise<GetOrderResponseDto[]> {
     const orders = await this.db.orders.findMany({
       include: {
-        order_items: true,
+        order_items:{
+          include:{
+            products:{
+              select:{
+                product_name:true,
+                
+              }
+            }
+          }
+        }
       },
+      where:{
+        user_id: filterlist?.userId,
+        order_status: filterlist?.orderStatus,
+        created_at: {
+          gte: filterlist?.orderStartDate ? new Date(filterlist.orderStartDate) : undefined,
+          lte: filterlist?.orderEndDate ? new Date(filterlist.orderEndDate) : undefined,
+        }
+      }
     });
 
     return orders.map((order) => ({
@@ -108,6 +125,7 @@ export class OrdersDBRepository {
       orderStatus: order.order_status,
       orderItems: order.order_items.map((item) => ({
         productId: item.product_id,
+        productName: item.products.product_name,
         quantity: item.quantity,
       })),
     }));
@@ -118,16 +136,24 @@ async getOrderById(id:string):Promise<GetOrderResponseDto>{
   const order = await this.db.orders.findUnique({
     where: { id: id },
     include: {
-      order_items: true,
+      order_items: {
+        include:{
+          products:{
+            select:{
+              product_name:true,
+              
+            }
+          }
+        }
+      }
+     
+      
     },
   });
 
-  const orderItems = await Promise.all(order.order_items.map(async (item) => ({
-      productId: item.product_id,
-      quantity: item.quantity,
-      productName: (await this.db.products.findUnique({ where: { id: item.product_id } }))?.product_name,
-    })));
-
+  if (!order) {
+    throw new BadRequestException(`Order with ID ${id} not found`);
+  }
 
   return {
     orderId: order.id,
@@ -135,7 +161,11 @@ async getOrderById(id:string):Promise<GetOrderResponseDto>{
     orderDate: order.created_at.toISOString(),
     total_amount_cents: order.total_price_cent,
     orderStatus: order.order_status,
-    orderItems: orderItems,
+    orderItems: order.order_items.map((item) => ({
+      productId: item.product_id,
+      quantity: item.quantity,
+      productName: item.products.product_name,
+    })),
   };
 }
 

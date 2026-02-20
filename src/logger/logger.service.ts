@@ -30,6 +30,7 @@ export class LoggerService {
     const isProduction = environment === 'production';
     const isStaging = environment === 'staging';
     const isDevelopment = environment === 'development';
+    const enableLoki = this.configService.get<boolean>('ENABLE_LOKI_LOGGING');
 
     // Create Winston logger with configuration
     this.logger = createLogger({
@@ -59,7 +60,7 @@ export class LoggerService {
       ],
     });
 
-    if (isDevelopment) {
+    if (isDevelopment && enableLoki) {
       // Start the log flusher
       this.startLogFlusher(lokiAPI);
 
@@ -82,7 +83,8 @@ export class LoggerService {
       this.breaker.on('halfOpen', () => Logger.log('Circuit breaker is half-open, trying to send logs again'));
       this.breaker.on('close', () => Logger.log('Circuit breaker closed, normal operation resumed'));
     } else {
-      Logger.log(`🚀 Loki logging is disabled in ${environment} mode`);
+      const reason = !isDevelopment ? `in ${environment} mode` : 'because ENABLE_LOKI_LOGGING is false';
+      Logger.log(`🚀 Loki logging is disabled ${reason}`);
     }
   }
 
