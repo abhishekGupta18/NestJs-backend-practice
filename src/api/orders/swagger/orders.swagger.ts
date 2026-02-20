@@ -57,7 +57,10 @@ export function UpdateOrderStatusSwagger() {
 
 export function GetAllOrdersSwagger() {
     return applyDecorators(
-        ApiOperation({ summary: 'Get all orders', description: 'Retrieve a list of all orders' }),
+        ApiOperation({ 
+            summary: 'Get all orders', 
+            description: 'Retrieve a list of all orders. Supports filtering by order status, user ID, and date range (orderStartDate and orderEndDate).' 
+        }),
         ApiResponse({
             status: HttpStatus.OK,
             description: 'Orders fetched successfully',

@@ -1,14 +1,10 @@
 import { ApiResponse } from "@common/dto/api-response";
 import { ApiProperty } from "@nestjs/swagger";
+import { OrderStatus } from "@prisma/client";
 import { Type } from "class-transformer";
 import { ArrayMinSize, IsArray, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 
-enum ORDERSTATUS {
-    PENDING = "PENDING",
-    PAID="PAID",
-    SHIPPED = "SHIPPED",
-    CANCELLED = "CANCELLED"
-}
+
 
 export class orderItemsDto{
 
@@ -76,8 +72,8 @@ export class CreatedOrderResponseDto{
 export class UpdateOrderStatusDto{
     @ApiProperty({example:"PENDING"})
     @IsNotEmpty()
-    @IsEnum(ORDERSTATUS)
-    orderStatus: ORDERSTATUS;
+    @IsEnum(OrderStatus)
+    orderStatus: OrderStatus;
 }
 
 export class UpdatedOrderResponseDto{
@@ -90,6 +86,32 @@ export class UpdatedOrderResponseDto{
     @IsNotEmpty()
     @IsString()
     orderStatus: string;
+    
+}
+
+export class FilterOrdersListDto {
+    @ApiProperty({example:"PENDING"})
+    @IsOptional()
+    @IsEnum(OrderStatus)
+    orderStatus?:OrderStatus;
+
+    @ApiProperty({example:"68272765sbvsbsh8njs2233"})
+    @IsOptional()
+    @IsString()
+    userId?:string;
+
+    @ApiProperty({example:"2026-02-19T10:55:38+05:30"})
+    @IsOptional()
+    @IsString()
+    orderStartDate?:string;
+
+    @ApiProperty({example:"2026-02-19T10:55:38+05:30"})
+    @IsOptional()
+    @IsString()
+    orderEndDate?:string;
+
+    
+
 }
 
 
