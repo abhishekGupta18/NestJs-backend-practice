@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { BadRequestException, InternalServerErrorException } from "@nestjs/common";
 import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getEnv } from "@common/getEnv";
 
 /**
  * Generates a standardized S3 key for media files.
@@ -20,7 +21,7 @@ export function generateMediaKey(
 ): string {
   const fileExtension = fileName.split('.').pop() || 'file';
   const uniqueFileName = `${uuidv4()}.${fileExtension}`;
-  return `${env}/${accessLevel}/${entityType}/${entityId}/${uniqueFileName}`;
+  return `${env}/${accessLevel.toLocaleLowerCase()}/${entityType.toLocaleLowerCase()}/${entityId}/${uniqueFileName}`;
 }
 
 /**
@@ -59,7 +60,7 @@ export async function generateSignedUrl(
   s3Client: S3Client,
   bucket: string,
   key: string,
-  expiresInSeconds: number = 3600
+  expiresInSeconds: number = Number(getEnv("AWS_S3_FILE_EXPIRE"))
 ): Promise<string> {
   try {
     const command = new GetObjectCommand({
