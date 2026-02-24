@@ -1,4 +1,4 @@
-import { Controller, Post, UseInterceptors, UploadedFile, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, Body, Get, Param, BadRequestException } from '@nestjs/common';
 import { MediaService } from './media.service';
 import { DirectUploadBodyDto, ConfirmUploadApiResponseDto, GetMediaApiResponseDto } from './dto/media.dto';
 import { ApiTags } from '@nestjs/swagger';
@@ -21,6 +21,9 @@ export class MediaController {
     @Body() dto: DirectUploadBodyDto,
     @UploadedFile() file: any,
   ): Promise<ConfirmUploadApiResponseDto> {
+    if(!file){
+      throw new BadRequestException('File is required');
+    }
     const data = await this.mediaService.directUpload(dto, file);
     return {
       status: 'success',

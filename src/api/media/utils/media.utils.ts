@@ -13,7 +13,6 @@ import { getEnv } from "@common/getEnv";
  * Generates a standardized S3 key for media files.
  */
 export function generateMediaKey(
-  env: string,
   accessLevel: MediaAccessLevel,
   entityType: MediaFileEntityType,
   entityId: string,
@@ -21,7 +20,7 @@ export function generateMediaKey(
 ): string {
   const fileExtension = fileName.split('.').pop() || 'file';
   const uniqueFileName = `${uuidv4()}.${fileExtension}`;
-  return `${env}/${accessLevel.toLocaleLowerCase()}/${entityType.toLocaleLowerCase()}/${entityId}/${uniqueFileName}`;
+  return `${accessLevel.toLocaleLowerCase()}/${entityType.toLocaleLowerCase()}/${entityId}/${uniqueFileName}`;
 }
 
 /**
@@ -53,16 +52,23 @@ export function validateTypeConstraints(entityType: MediaFileEntityType, fileTyp
   }
 }
 
+const s3Client = new S3Client({
+  region: getEnv("AWS_REGION"),
+  credentials: {
+    accessKeyId: getEnv("AWS_ACCESS_KEY_ID"),
+    secretAccessKey: getEnv("AWS_SECRET_ACCESS_KEY"),
+  },
+});
+
 /**
  * Generates a temporary pre-signed URL for S3 object access.
  */
 export async function generateSignedUrl(
-  s3Client: S3Client,
-  bucket: string,
   key: string,
   expiresInSeconds: number = Number(getEnv("AWS_S3_FILE_EXPIRE"))
 ): Promise<string> {
   try {
+    const bucket = getEnv("AWS_S3_BUCKET");
     const command = new GetObjectCommand({
       Bucket: bucket,
       Key: key,

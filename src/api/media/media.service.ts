@@ -30,18 +30,14 @@ export class MediaService {
    * Advanced one-step file upload with metadata validation and private access.
    */
   async directUpload(dto: DirectUploadBodyDto, file: any): Promise<ConfirmUploadResponseDto> {
-    if (!file) {
-      throw new BadRequestException('File is required');
-    }
 
     // 1. Domain Validation via Utility
     validateTypeConstraints(dto.entityType, dto.fileType);
 
     const accessLevel = MediaAccessLevel.PRIVATE;
-    const env = this.config.get('NODE_ENV') || 'development';
     
     // 2. Generate Key using Utility
-    const key = generateMediaKey(env, accessLevel, dto.entityType, dto.entityId, file.originalname);
+    const key = generateMediaKey(accessLevel, dto.entityType, dto.entityId, file.originalname);
 
     // 3. Create DB record via DB Service
     const mediaFile = await this.mediaDb.createMediaRecord({
@@ -63,7 +59,9 @@ export class MediaService {
         ContentType: file.mimetype,
       }));
     } catch (error) {
-      throw new InternalServerErrorException('S3 transmission failed');
+      // Cleanup: Delete DB record if S3 upload fails
+      await this.mediaDb.deleteMediaRecord(mediaFile.id);
+      throw new InternalServerErrorException(`S3 transmission failed: ${error.message}`);
     }
 
     // 5. Confirm and Return
@@ -81,8 +79,7 @@ export class MediaService {
       throw new BadRequestException('Media upload is not yet completed');
     }
 
-    const bucket = this.config.getOrThrow('AWS_S3_BUCKET');
-    const url = await generateSignedUrl(this.s3Client, bucket, mediaFile.s3_key);
+    const url = await generateSignedUrl(mediaFile.s3_key);
 
     return {
       id: mediaFile.id,
@@ -111,7 +108,7 @@ export class MediaService {
     }
 
     const updatedMedia = await this.mediaDb.updateMediaStatus(mediaId, 'COMPLETED');
-    const signedUrl = await generateSignedUrl(this.s3Client, bucket, updatedMedia.s3_key);
+    const signedUrl = await generateSignedUrl(updatedMedia.s3_key);
 
     return { 
       id: updatedMedia.id, 

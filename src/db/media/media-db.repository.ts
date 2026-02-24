@@ -79,4 +79,10 @@ export class MediaDbRepository {
     });
     return record as MediaFile;
   }
+
+  async deleteMediaRecord(id: string): Promise<void> {
+    await this.db.media_files.delete({
+      where: { id },
+    });
+  }
 }

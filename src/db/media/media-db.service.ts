@@ -21,4 +21,8 @@ export class MediaDbService {
   async updateMediaStatus(id: string, status: string): Promise<MediaFile> {
     return this.mediaRepository.updateMediaStatus(id, status);
   }
+
+  async deleteMediaRecord(id: string): Promise<void> {
+    return this.mediaRepository.deleteMediaRecord(id);
+  }
 }
