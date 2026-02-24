@@ -1,5 +1,5 @@
-import { IsString, IsNotEmpty, IsEnum, IsOptional, IsInt, IsUUID } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsNotEmpty, IsEnum, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 import { ApiResponse } from '../../../common/dto/api-response';
 
 // Matches your schema enum
@@ -23,46 +23,26 @@ export enum MediaAccessLevel {
   PRIVATE = 'PRIVATE',
 }
 
-export class GeneratePresignedUrlBodyDto {
-  @ApiProperty({ type: 'string', format: 'binary', description: 'Select a file to automatically extract info' })
+export class DirectUploadBodyDto {
+  @ApiProperty({ type: 'string', format: 'binary', description: 'The file to upload' })
+  @IsOptional()
   file: any;
 
-  @ApiPropertyOptional({ 
-    example: 'profile.jpg', 
-    description: 'Optional override for file name. If blank, extracted from selected file.' 
-  })
+  @ApiProperty({ enum: MediaFileEntityType, example: MediaFileEntityType.PRODUCT })
+  @IsEnum(MediaFileEntityType)
+  @IsNotEmpty()
+  entityType: MediaFileEntityType;
+
+  @ApiProperty({ example: 'uuid-here' })
   @IsString()
-  @IsOptional()
-  fileName?: string;
+  @IsNotEmpty()
+  entityId: string;
 
-  @ApiPropertyOptional({ 
-    example: 'image/jpeg', 
-    description: 'Optional override for content type. If blank, extracted from selected file.' 
-  })
-  @IsString()
-  @IsOptional()
-  contentType?: string; // e.g., 'image/jpeg'
+  @ApiProperty({ enum: MediaFileType, example: MediaFileType.PRODUCT_IMAGE_MAIN })
+  @IsEnum(MediaFileType)
+  @IsNotEmpty()
+  fileType: MediaFileType;
 }
-
-export class GeneratePresignedUrlResponseDto {
-  @ApiProperty()
-  url: string;
-
-  @ApiProperty()
-  fields: Record<string, string>;
-
-  @ApiProperty()
-  mediaFileId: string;
-
-  @ApiProperty()
-  key: string;
-}
-
-export class GeneratePresignedUrlApiResponseDto extends ApiResponse<GeneratePresignedUrlResponseDto> {
-  @ApiProperty({ type: () => GeneratePresignedUrlResponseDto })
-  declare data?: GeneratePresignedUrlResponseDto;
-}
-
 
 export class ConfirmUploadResponseDto {
   @ApiProperty()
@@ -70,11 +50,40 @@ export class ConfirmUploadResponseDto {
 
   @ApiProperty()
   status: string;
-  
-  // Add other relevant fields from the media object if needed
+
+  @ApiProperty({ description: 'The signed access URL for the uploaded file' })
+  url: string;
 }
 
 export class ConfirmUploadApiResponseDto extends ApiResponse<ConfirmUploadResponseDto> {
   @ApiProperty({ type: () => ConfirmUploadResponseDto })
   declare data?: ConfirmUploadResponseDto;
+}
+
+export class GetMediaResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty({ enum: MediaFileEntityType })
+  entityType: string;
+
+  @ApiProperty()
+  entityId: string;
+
+  @ApiProperty()
+  status: string;
+
+  @ApiProperty({ enum: MediaAccessLevel })
+  accessLevel: string;
+
+  @ApiProperty({ description: 'The fresh signed access URL' })
+  url: string;
+
+  @ApiProperty()
+  createdAt: Date;
+}
+
+export class GetMediaApiResponseDto extends ApiResponse<GetMediaResponseDto> {
+  @ApiProperty({ type: () => GetMediaResponseDto })
+  declare data?: GetMediaResponseDto;
 }

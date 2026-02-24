@@ -1,8 +1,8 @@
-import { Controller, Post, Body, Param, Get, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Post, UseInterceptors, UploadedFile, Body, Get, Param, BadRequestException } from '@nestjs/common';
 import { MediaService } from './media.service';
-import { GeneratePresignedUrlBodyDto, MediaFileEntityType, MediaFileType, MediaAccessLevel, GeneratePresignedUrlApiResponseDto, ConfirmUploadApiResponseDto } from './dto/media.dto';
+import { DirectUploadBodyDto, ConfirmUploadApiResponseDto, GetMediaApiResponseDto } from './dto/media.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiGeneratePresignedUrl, ApiConfirmUpload, ApiGetAccessUrl } from './swagger/media.swagger';
+import { ApiDirectUpload, ApiGetMedia } from './swagger/media.swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Media')
@@ -10,51 +10,40 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
-  @ApiGeneratePresignedUrl()
-  @Post(':entityType/:entityId/:fileType/:accessLevel/presigned-url')
+  /**
+   * Advanced file upload route.
+   * Receives a file and metadata, validates types, and returns a signed access URL.
+   */
+  @ApiDirectUpload()
+  @Post('')
   @UseInterceptors(FileInterceptor('file'))
-  async getPresignedUrl(
-    @Param('entityType') entityType: MediaFileEntityType,
-    @Param('entityId') entityId: string,
-    @Param('fileType') fileType: MediaFileType,
-    @Param('accessLevel') accessLevel: MediaAccessLevel,
-    @Body() dto: GeneratePresignedUrlBodyDto,
-    @UploadedFile() file?: any,
-  ): Promise<GeneratePresignedUrlApiResponseDto> {
-    const data = await this.mediaService.generatePresignedUrl(
-      dto,
-      entityId,
-      entityType,
-      fileType,
-      accessLevel,
-      file,
-    );
+  async directUpload(
+    @Body() dto: DirectUploadBodyDto,
+    @UploadedFile() file: any,
+  ): Promise<ConfirmUploadApiResponseDto> {
+    if(!file){
+      throw new BadRequestException('File is required');
+    }
+    const data = await this.mediaService.directUpload(dto, file);
     return {
       status: 'success',
-      message: 'Presigned URL generated successfully',
+      message: 'File uploaded and validated successfully',
       data,
     };
   }
 
-  @ApiConfirmUpload()
-  @Post(':id/confirm')
-  async confirmUpload(@Param('id') id: string): Promise<ConfirmUploadApiResponseDto> {
-    const data = await this.mediaService.confirmUpload(id);
+  /**
+   * Retrieval route.
+   * Returns media details and a fresh signed access URL.
+   */
+  @ApiGetMedia()
+  @Get(':id')
+  async getMedia(@Param('id') id: string): Promise<GetMediaApiResponseDto> {
+    const data = await this.mediaService.getMediaById(id);
     return {
       status: 'success',
-      message: 'Upload confirmed successfully',
+      message: 'Media retrieved successfully',
       data,
-    };
-  }
-
-  @ApiGetAccessUrl()
-  @Get(':id/access')
-  async getAccessUrl(@Param('id') id: string) {
-    const url = await this.mediaService.getAccessUrl(id);
-    return {
-      status: 'success',
-      message: 'Access URL generated successfully',
-      data: { url },
     };
   }
 }

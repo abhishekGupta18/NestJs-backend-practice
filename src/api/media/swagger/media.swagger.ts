@@ -1,38 +1,60 @@
 import { applyDecorators, HttpStatus } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags, ApiParam, ApiBody, ApiConsumes } from '@nestjs/swagger';
-import { GeneratePresignedUrlApiResponseDto, ConfirmUploadApiResponseDto, MediaFileEntityType, MediaFileType, MediaAccessLevel } from '../dto/media.dto';
+import { ApiOperation, ApiResponse, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { 
+  ConfirmUploadApiResponseDto, 
+  GetMediaApiResponseDto,
+  MediaFileEntityType, 
+  MediaFileType 
+} from '../dto/media.dto';
 
-export function ApiGeneratePresignedUrl() {
+/**
+ * Swagger decorator for the advanced direct upload endpoint.
+ */
+export function ApiDirectUpload() {
   return applyDecorators(
-    ApiOperation({ summary: 'Generate a presigned URL for file upload to S3 (Select file to extract info)' }),
+    ApiOperation({ 
+      summary: 'Advanced file upload with type validation', 
+      description: 'Uploads a file, enforces entity-specific type rules, and returns a private signed URL.' 
+    }),
     ApiConsumes('multipart/form-data'),
-    ApiParam({ name: 'entityType', enum: MediaFileEntityType, description: 'The type of entity the media belongs to' }),
-    ApiParam({ name: 'entityId', description: 'The ID of the entity' }),
-    ApiParam({ name: 'fileType', enum: MediaFileType, description: 'The specific type of the media file' }),
-    ApiParam({ name: 'accessLevel', enum: MediaAccessLevel, description: 'Access level: PUBLIC or PRIVATE' }),
-    ApiResponse({ status: HttpStatus.CREATED, type: GeneratePresignedUrlApiResponseDto, description: 'Presigned URL generated successfully' }),
-    ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid request parameters' }),
-    ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error' }),
+    ApiBody({
+      description: 'File and entity metadata',
+      type: 'object',
+      schema: {
+        type: 'object',
+        properties: {
+          file: { type: 'string', format: 'binary', description: 'The binary file content' },
+          entityType: { enum: Object.values(MediaFileEntityType), description: 'PRODUCT, USER, or ORDER' },
+          entityId: { type: 'string', description: 'UUID of the entity' },
+          fileType: { enum: Object.values(MediaFileType), description: 'Specific type code for the file' },
+        },
+        required: ['file', 'entityType', 'entityId', 'fileType'],
+      },
+    }),
+    ApiResponse({ 
+      status: HttpStatus.CREATED, 
+      type: ConfirmUploadApiResponseDto, 
+      description: 'Media file processed successfully (Includes Signed URL)' 
+    }),
+    ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Type validation failure or missing file' }),
+    ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'S3 or Database failure' }),
   );
 }
 
-export function ApiConfirmUpload() {
+/**
+ * Swagger decorator for the media retrieval endpoint.
+ */
+export function ApiGetMedia() {
   return applyDecorators(
-    ApiOperation({ summary: 'Confirm that a file has been successfully uploaded to S3' }),
-    ApiParam({ name: 'id', description: 'The UUID of the media file to confirm' }),
-    ApiResponse({ status: HttpStatus.CREATED, type: ConfirmUploadApiResponseDto, description: 'Upload confirmed and record updated' }),
-    ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid media file or already processed' }),
-    ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'File not found in S3' }),
-    ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error' }),
-  );
-}
-
-export function ApiGetAccessUrl() {
-  return applyDecorators(
-    ApiOperation({ summary: 'Get a temporary or direct access URL for a media file' }),
-    ApiParam({ name: 'id', description: 'The UUID of the media file' }),
-    ApiResponse({ status: HttpStatus.OK, description: 'Access URL retrieved successfully' }),
-    ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Media file not found' }),
-    ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error' }),
+    ApiOperation({ 
+      summary: 'Retrieve media details and signed URL', 
+      description: 'Returns the metadata and a fresh private signed URL for a specific media file ID.' 
+    }),
+    ApiResponse({ 
+      status: HttpStatus.OK, 
+      type: GetMediaApiResponseDto, 
+      description: 'Media retrieved successfully' 
+    }),
+    ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Media not found or not completed' }),
   );
 }

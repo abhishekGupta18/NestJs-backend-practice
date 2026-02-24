@@ -1,162 +1,119 @@
 import { Injectable, Inject, BadRequestException, InternalServerErrorException } from '@nestjs/common';
-import { S3Client, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { S3Client, HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { ConfigService } from '@nestjs/config';
-import { DBService } from '@db/db.service';
-import { GeneratePresignedUrlBodyDto, MediaFileEntityType, MediaFileType, MediaAccessLevel, GeneratePresignedUrlResponseDto, ConfirmUploadResponseDto } from './dto/media.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { 
+  MediaFileEntityType, 
+  MediaFileType, 
+  MediaAccessLevel, 
+  ConfirmUploadResponseDto,
+  DirectUploadBodyDto,
+  GetMediaResponseDto
+} from './dto/media.dto';
 import { S3_CLIENT } from './provider/s3.provider';
+import { MediaDbService } from '@db/media/media-db.service';
+import { 
+  generateMediaKey, 
+  isImageFileType, 
+  validateTypeConstraints, 
+  generateSignedUrl 
+} from './utils/media.utils';
 
 @Injectable()
 export class MediaService {
   constructor(
     @Inject(S3_CLIENT) private readonly s3Client: S3Client,
     private readonly config: ConfigService,
-    private readonly db: DBService,
+    private readonly mediaDb: MediaDbService,
   ) {}
 
-  async generatePresignedUrl(
-    body: GeneratePresignedUrlBodyDto,
-    entityId: string,
-    entityType: MediaFileEntityType,
-    fileType: MediaFileType,
-    accessLevel: MediaAccessLevel,
-    file?: any,
-  ): Promise<GeneratePresignedUrlResponseDto> {
-    const fileName = body.fileName || file?.originalname;
-    const contentType = body.contentType || file?.mimetype;
+  /**
+   * Advanced one-step file upload with metadata validation and private access.
+   */
+  async directUpload(dto: DirectUploadBodyDto, file: any): Promise<ConfirmUploadResponseDto> {
 
-    if (!fileName || !contentType) {
-      throw new BadRequestException('File name and content type are required');
-    }
+    // 1. Domain Validation via Utility
+    validateTypeConstraints(dto.entityType, dto.fileType);
 
-    const fileExtension = fileName.split('.').pop();
-    const uniqueFileName = `${uuidv4()}.${fileExtension}`;
+    const accessLevel = MediaAccessLevel.PRIVATE;
     
-    // 1. Structure the Key: env/accessLevel/entityType/entityId/filename
-    const key = `${this.config.get('NODE_ENV')}/${accessLevel}/${entityType}/${entityId}/${uniqueFileName}`;
+    // 2. Generate Key using Utility
+    const key = generateMediaKey(accessLevel, dto.entityType, dto.entityId, file.originalname);
 
-    // 2. Transaction: Create "Pending" Record + Attributes
-    const result = await this.db.$transaction(async (tx) => {
-      const mediaFile = await tx.media_files.create({
-        data: {
-          entity_type: entityType,
-          entity_id: entityId,
-          s3_key: key,
-          status: 'PENDING',
-          access_level: accessLevel,
-        },
-      });
-
-      const isImage = [
-        MediaFileType.PROFILE_IMAGE,
-        MediaFileType.COVER_IMAGE,
-        MediaFileType.PRODUCT_IMAGE_MAIN,
-        MediaFileType.PRODUCT_IMAGE_VARIANT,
-      ].includes(fileType);
-
-      if (isImage) {
-        await tx.image_attributes.create({
-          data: {
-            media_file_id: mediaFile.id,
-            image_type: fileType,
-            image_name: fileName,
-          },
-        });
-      } else {
-        await tx.document_attributes.create({
-          data: {
-            media_file_id: mediaFile.id,
-            document_type: fileType,
-            document_name: fileName,
-          },
-        });
-      }
-
-      return mediaFile;
+    // 3. Create DB record via DB Service
+    const mediaFile = await this.mediaDb.createMediaRecord({
+      entityId: dto.entityId,
+      entityType: dto.entityType,
+      s3Key: key,
+      accessLevel,
+      fileName: file.originalname,
+      fileType: dto.fileType,
+      isImage: isImageFileType(dto.fileType),
     });
 
-    // 3. Generate Presigned POST Policy
+    // 4. Upload to S3
     try {
-      const { url, fields } = await createPresignedPost(this.s3Client, {
+      await this.s3Client.send(new PutObjectCommand({
         Bucket: this.config.getOrThrow('AWS_S3_BUCKET'),
         Key: key,
-        Conditions: [
-          ['content-length-range', 0, 10485760], // Max 10MB
-          ['eq', '$Content-Type', contentType], // Strict MIME check
-        ],
-        Fields: {
-          'Content-Type': contentType,
-        },
-        Expires: 300, // 5 minutes
-      });
-
-      return { url, fields, mediaFileId: result.id, key };
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      }));
     } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException('Could not generate presigned URL');
+      // Cleanup: Delete DB record if S3 upload fails
+      await this.mediaDb.deleteMediaRecord(mediaFile.id);
+      throw new InternalServerErrorException(`S3 transmission failed: ${error.message}`);
     }
+
+    // 5. Confirm and Return
+    return this.confirmUpload(mediaFile.id);
   }
 
-  async confirmUpload(mediaId: string): Promise<ConfirmUploadResponseDto> {
-    // 1. Fetch the pending record
-    const mediaFile = await this.db.media_files.findUnique({
-      where: { id: mediaId },
-    });
+  async getMediaById(id: string): Promise<GetMediaResponseDto> {
+    const mediaFile = await this.mediaDb.findMediaById(id);
 
-    if (!mediaFile || mediaFile.status !== 'PENDING') {
-      throw new BadRequestException('Invalid media file or already processed');
+    if (!mediaFile) {
+      throw new BadRequestException('Media record not found');
     }
 
-    // 2. Verify file actually exists in S3 (Safety Check)
+    if (mediaFile.status !== 'COMPLETED') {
+      throw new BadRequestException('Media upload is not yet completed');
+    }
+
+    const url = await generateSignedUrl(mediaFile.s3_key);
+
+    return {
+      id: mediaFile.id,
+      entityType: mediaFile.entity_type,
+      entityId: mediaFile.entity_id,
+      status: mediaFile.status,
+      accessLevel: mediaFile.access_level as MediaAccessLevel,
+      url,
+      createdAt: mediaFile.created_at,
+    };
+  }
+
+  private async confirmUpload(mediaId: string): Promise<ConfirmUploadResponseDto> {
+    const mediaFile = await this.mediaDb.findMediaById(mediaId);
+    if (!mediaFile) throw new BadRequestException('Record missing');
+
+    const bucket = this.config.getOrThrow('AWS_S3_BUCKET');
+
     try {
       await this.s3Client.send(new HeadObjectCommand({
-        Bucket: this.config.getOrThrow('AWS_S3_BUCKET'),
+        Bucket: bucket,
         Key: mediaFile.s3_key,
       }));
     } catch (error) {
-      throw new BadRequestException('File not found in S3. Upload may have failed.');
+      throw new BadRequestException('File not found in storage');
     }
 
-    // 3. Update Status
-    const updatedMedia = await this.db.media_files.update({
-      where: { id: mediaId },
-      data: { status: 'COMPLETED' },
-    });
+    const updatedMedia = await this.mediaDb.updateMediaStatus(mediaId, 'COMPLETED');
+    const signedUrl = await generateSignedUrl(updatedMedia.s3_key);
 
-    return {
-      id: updatedMedia.id,
+    return { 
+      id: updatedMedia.id, 
       status: updatedMedia.status,
+      url: signedUrl 
     };
-  }
-  async getAccessUrl(mediaId: string): Promise<string> {
-    const media = await this.db.media_files.findUnique({
-      where: { id: mediaId },
-    });
-
-    if (!media) {
-      throw new BadRequestException('Media file not found');
-    }
-
-    if (media.access_level === 'PUBLIC') {
-      // Public Access: Return direct URL
-      // https://BUCKET.s3.REGION.amazonaws.com/KEY
-      return `https://${this.config.get('AWS_S3_BUCKET')}.s3.${this.config.get('AWS_REGION')}.amazonaws.com/${media.s3_key}`;
-    }
-
-    // Private Access: Generate Presigned GET URL
-    try {
-      const command = new GetObjectCommand({
-        Bucket: this.config.getOrThrow('AWS_S3_BUCKET'),
-        Key: media.s3_key,
-      });
-
-      // URL valid for 1 hour
-      return getSignedUrl(this.s3Client as any, command, { expiresIn: 3600 });
-    } catch (error) {
-      console.error(error);
-      throw new InternalServerErrorException('Could not generate access URL');
-    }
   }
 }

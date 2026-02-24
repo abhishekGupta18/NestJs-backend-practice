@@ -11,11 +11,35 @@ import { CategoriesDbService } from './categories/categories-db.service';
 import { CategoriesDbRepository } from './categories/categoroies-db.repository';
 import { OrdersDbService } from './orders/orders-db.service';
 import { OrdersDBRepository } from './orders/orders-db.repository';
+import { MediaDbService } from './media/media-db.service';
+import { MediaDbRepository } from './media/media-db.repository';
 
 @Global()
 @Module({
   imports: [ConfigModule],
-  providers: [DBService, OtpDbService,OtpDbRepository,AuthDbRepository,AuthDbService, ProductsDbRepository, ProductsDbService, CategoriesDbService, CategoriesDbRepository, OrdersDBRepository, OrdersDbService],
-  exports: [DBService, OtpDbService,AuthDbService, ProductsDbService, CategoriesDbService, OrdersDbService],
+  providers: [
+    DBService, 
+    OtpDbService, 
+    OtpDbRepository, 
+    AuthDbRepository, 
+    AuthDbService, 
+    ProductsDbRepository, 
+    ProductsDbService, 
+    CategoriesDbService, 
+    CategoriesDbRepository, 
+    OrdersDBRepository, 
+    OrdersDbService,
+    MediaDbService,
+    MediaDbRepository
+  ],
+  exports: [
+    DBService, 
+    OtpDbService, 
+    AuthDbService, 
+    ProductsDbService, 
+    CategoriesDbService, 
+    OrdersDbService,
+    MediaDbService
+  ],
 })  
 export class DBModule {}
