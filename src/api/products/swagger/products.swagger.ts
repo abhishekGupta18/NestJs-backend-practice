@@ -1,6 +1,7 @@
 import { applyDecorators, HttpStatus } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiQuery, ApiResponse } from "@nestjs/swagger";
 import { CreateProductApiResponseDto, CreateProductDto, ProductListApiResponseDto, UpdateProductApiResponseDto, UpdateProductDto } from "../dto/products.dto";
+import { ApiBadRequestResponse, ApiForbiddenResponse, ApiInternalServerErrorResponse, ApiUnauthorizedResponse } from "@common/helpers/swagger.utils";
 
 export function CreateProductSwagger() {
     return applyDecorators(
@@ -11,22 +12,10 @@ export function CreateProductSwagger() {
             description: 'Product created successfully',
             type: CreateProductApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.FORBIDDEN,
-            description: 'Forbidden - Insufficient permissions',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiBadRequestResponse(),
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiForbiddenResponse('Forbidden - Insufficient permissions'),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -39,22 +28,10 @@ export function UpdateProductSwagger() {
             description: 'Product updated successfully',
             type: UpdateProductApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.FORBIDDEN,
-            description: 'Forbidden - Insufficient permissions',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiBadRequestResponse(),
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiForbiddenResponse('Forbidden - Insufficient permissions'),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -75,17 +52,9 @@ export function ProductListSwagger() {
             description: 'Products fetched successfully',
             type: ProductListApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.FORBIDDEN,
-            description: 'Forbidden - Insufficient permissions',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiForbiddenResponse('Forbidden - Insufficient permissions'),
+        ApiInternalServerErrorResponse()
     );
 }
+

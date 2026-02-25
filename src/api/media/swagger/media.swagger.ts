@@ -6,6 +6,7 @@ import {
   MediaFileEntityType, 
   MediaFileType 
 } from '../dto/media.dto';
+import { ApiBadRequestResponse, ApiInternalServerErrorResponse } from '@common/helpers/swagger.utils';
 
 /**
  * Swagger decorator for the advanced direct upload endpoint.
@@ -36,8 +37,8 @@ export function ApiDirectUpload() {
       type: ConfirmUploadApiResponseDto, 
       description: 'Media file processed successfully (Includes Signed URL)' 
     }),
-    ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Type validation failure or missing file' }),
-    ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'S3 or Database failure' }),
+    ApiBadRequestResponse('Type validation failure or missing file'),
+    ApiInternalServerErrorResponse('S3 or Database failure'),
   );
 }
 
@@ -55,6 +56,7 @@ export function ApiGetMedia() {
       type: GetMediaApiResponseDto, 
       description: 'Media retrieved successfully' 
     }),
-    ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Media not found or not completed' }),
+    ApiBadRequestResponse('Media not found or not completed'),
   );
 }
+

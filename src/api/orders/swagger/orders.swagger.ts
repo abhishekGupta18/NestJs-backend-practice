@@ -1,6 +1,7 @@
 import { applyDecorators, HttpStatus } from "@nestjs/common";
 import { ApiBody, ApiOperation, ApiParam, ApiResponse } from "@nestjs/swagger";
 import { CreateOrderDto, CreatedOrderApiResponseDto, GetAllOrdersApiResponseDto, GetOrdersApiResponseDto, UpdatedOrderApiResponseDto, UpdateOrderStatusDto } from "../dto/orders.dto";
+import { ApiBadRequestResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiUnauthorizedResponse } from "@common/helpers/swagger.utils";
 
 export function CreateOrderSwagger() {
     return applyDecorators(
@@ -11,18 +12,9 @@ export function CreateOrderSwagger() {
             description: 'Order created successfully',
             type: CreatedOrderApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiBadRequestResponse(),
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -36,22 +28,10 @@ export function UpdateOrderStatusSwagger() {
             description: 'Order status updated successfully',
             type: UpdatedOrderApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid status provided',
-        }),
-        ApiResponse({
-            status: HttpStatus.NOT_FOUND,
-            description: 'Order not found',
-        }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiBadRequestResponse('Invalid status provided'),
+        ApiNotFoundResponse('Order not found'),
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -66,14 +46,8 @@ export function GetAllOrdersSwagger() {
             description: 'Orders fetched successfully',
             type: GetAllOrdersApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -86,17 +60,9 @@ export function GetOrderByIdSwagger() {
             description: 'Order fetched successfully',
             type: GetOrdersApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.NOT_FOUND,
-            description: 'Order not found',
-        }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiNotFoundResponse('Order not found'),
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiInternalServerErrorResponse()
     );
 }
+
