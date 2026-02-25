@@ -2,6 +2,7 @@ import { applyDecorators, HttpStatus } from "@nestjs/common";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { OtpSentResponseDto, ResendOtpResponseDto } from "../dto/verify-otp.dto";
 import { UserLoginApiResponseDto, UserSignUpApiResponseDto } from "../dto/auth.dto";
+import { ApiBadRequestResponse, ApiConflictResponse, ApiInternalServerErrorResponse } from "@common/helpers/swagger.utils";
 
 export function AuthSignup() {
     return applyDecorators(
@@ -11,20 +12,9 @@ export function AuthSignup() {
             description: 'OTP sent successfully',
             type: OtpSentResponseDto
         }),
-         ApiResponse({
-            status: HttpStatus.CONFLICT,
-            description: 'User already exists',
-        }),
-
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiConflictResponse('User already exists'),
+        ApiBadRequestResponse(),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -36,20 +26,9 @@ export function AuthVerifyOtp() {
             description: 'User verified and registered successfully',
             type: UserSignUpApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.CONFLICT,
-             description: 'Invalid OTP or User already exists',
-        }),
-
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiConflictResponse('Invalid OTP or User already exists'),
+        ApiBadRequestResponse(),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -61,20 +40,9 @@ export function AuthResendOtp() {
             description: 'OTP resent successfully',
             type: ResendOtpResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.CONFLICT,
-            description: 'User already exists',
-            }),
-
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiConflictResponse('User already exists'),
+        ApiBadRequestResponse(),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -84,48 +52,24 @@ export function AuthLogin() {
         ApiResponse({
             status: HttpStatus.OK,
             description: 'User logged in successfully',
-                type: UserLoginApiResponseDto
-            }),
-            ApiResponse({
-                status: HttpStatus.CONFLICT,
-                description: 'User not found',
-            }),
-
-            ApiResponse({
-                status: HttpStatus.BAD_REQUEST,
-                description: 'Invalid request',
-            }),
-
-            ApiResponse({
-                status: HttpStatus.INTERNAL_SERVER_ERROR,
-                description: 'Internal server error',
-            })
-
-        );
+            type: UserLoginApiResponseDto
+        }),
+        ApiConflictResponse('User not found'),
+        ApiBadRequestResponse(),
+        ApiInternalServerErrorResponse()
+    );
 }
 
-        export function AuthLogout() {
-            return applyDecorators(
-                ApiOperation({ summary: 'Logout user' }),
-                ApiResponse({
-                    status: HttpStatus.OK,
-                    description: 'User logged out successfully',
-                    type: UserLoginApiResponseDto
-                }),
-                ApiResponse({
-                    status: HttpStatus.CONFLICT,
-                    description: 'User not found',
-                }),
-
-                ApiResponse({
-                    status: HttpStatus.BAD_REQUEST,
-                    description: 'Invalid request',
-                }),
-
-                ApiResponse({
-                    status: HttpStatus.INTERNAL_SERVER_ERROR,
-                    description: 'Internal server error',
-                })
-
-            );
-        }   
+export function AuthLogout() {
+    return applyDecorators(
+        ApiOperation({ summary: 'Logout user' }),
+        ApiResponse({
+            status: HttpStatus.OK,
+            description: 'User logged out successfully',
+            type: UserLoginApiResponseDto
+        }),
+        ApiConflictResponse('User not found'),
+        ApiBadRequestResponse(),
+        ApiInternalServerErrorResponse()
+    );
+}

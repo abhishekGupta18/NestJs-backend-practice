@@ -1,6 +1,13 @@
 import { applyDecorators, HttpStatus } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiParam } from "@nestjs/swagger";
 import { CategoryApiResponseDto, GetAllCategoriesApiResponseDto } from "../dto/categories.dto";
+import { 
+    ApiBadRequestResponse, 
+    ApiForbiddenResponse, 
+    ApiInternalServerErrorResponse, 
+    ApiNotFoundResponse, 
+    ApiUnauthorizedResponse 
+} from "@common/helpers/swagger.utils";
 
 export function CreateCategory() {
     return applyDecorators(
@@ -10,22 +17,10 @@ export function CreateCategory() {
             description: 'Category created successfully',
             type: CategoryApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.FORBIDDEN,
-            description: 'Forbidden - Insufficient permissions',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiBadRequestResponse(),
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiForbiddenResponse('Forbidden - Insufficient permissions'),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -43,26 +38,11 @@ export function GetCategoryById() {
             description: 'Category fetched successfully',
             type: CategoryApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.NOT_FOUND,
-            description: 'Category not found',
-        }),
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.FORBIDDEN,
-            description: 'Forbidden - Insufficient permissions',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiNotFoundResponse('Category not found'),
+        ApiBadRequestResponse(),
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiForbiddenResponse('Forbidden - Insufficient permissions'),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -74,22 +54,10 @@ export function GetAllCategories() {
             description: 'Categories fetched successfully',
             type: GetAllCategoriesApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.FORBIDDEN,
-            description: 'Forbidden - Insufficient permissions',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiBadRequestResponse(),
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiForbiddenResponse('Forbidden - Insufficient permissions'),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -107,26 +75,11 @@ export function UpdateCategory() {
             description: 'Category updated successfully',
             type: CategoryApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.NOT_FOUND,
-            description: 'Category not found',
-        }),
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.FORBIDDEN,
-            description: 'Forbidden - Insufficient permissions',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiNotFoundResponse('Category not found'),
+        ApiBadRequestResponse(),
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiForbiddenResponse('Forbidden - Insufficient permissions'),
+        ApiInternalServerErrorResponse()
     );
 }
 
@@ -144,25 +97,11 @@ export function DeleteCategory() {
             description: 'Category deleted successfully',
             type: CategoryApiResponseDto
         }),
-        ApiResponse({
-            status: HttpStatus.NOT_FOUND,
-            description: 'Category not found',
-        }),
-        ApiResponse({
-            status: HttpStatus.BAD_REQUEST,
-            description: 'Invalid request',
-        }),
-        ApiResponse({
-            status: HttpStatus.UNAUTHORIZED,
-            description: 'Unauthorized - Invalid or missing JWT token',
-        }),
-        ApiResponse({
-            status: HttpStatus.FORBIDDEN,
-            description: 'Forbidden - Insufficient permissions',
-        }),
-        ApiResponse({
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            description: 'Internal server error',
-        })
+        ApiNotFoundResponse('Category not found'),
+        ApiBadRequestResponse(),
+        ApiUnauthorizedResponse('Unauthorized - Invalid or missing JWT token'),
+        ApiForbiddenResponse('Forbidden - Insufficient permissions'),
+        ApiInternalServerErrorResponse()
     );
 }
+
